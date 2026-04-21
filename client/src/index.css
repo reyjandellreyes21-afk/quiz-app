@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply m-0 bg-app text-text-primary font-sans antialiased;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .app-container {
+    @apply mx-auto w-full max-w-7xl px-4 md:px-6;
+  }
+
+  .app-card {
+    @apply rounded-2xl border border-slate-700/60 bg-slate-900/70 p-5 backdrop-blur;
+  }
+
+  .app-card-interactive {
+    @apply app-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-indigo-500/40;
+  }
+
+  .btn-base {
+    @apply h-11 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-indigo-500/50;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-brand-primary text-white hover:bg-brand-hover;
+  }
+
+  .btn-secondary {
+    @apply btn-base bg-slate-800 text-slate-100 hover:bg-slate-700;
+  }
+
+  .btn-ghost {
+    @apply btn-base bg-transparent text-slate-300 hover:bg-slate-800;
+  }
+
+  .btn-danger {
+    @apply btn-base bg-danger text-white hover:bg-rose-500;
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30;
+  }
+
+  .label-base {
+    @apply mb-1.5 block text-sm text-slate-300;
+  }
+
+  .meta-label {
+    @apply text-xs uppercase tracking-wide text-slate-400;
+  }
+}
