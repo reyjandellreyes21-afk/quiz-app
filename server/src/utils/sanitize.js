@@ -1,5 +1,6 @@
 export const sanitizeQuizForList = (quiz) => ({
-  id: quiz.id,
+  id: quiz.id || quiz._id?.toString?.() || quiz._id,
+  _id: quiz._id?.toString?.() || quiz._id || quiz.id,
   title: quiz.title,
   category: quiz.category,
   description: quiz.description,
@@ -12,7 +13,8 @@ export const sanitizeQuizForList = (quiz) => ({
 export const sanitizeQuizForPlayer = (quiz) => ({
   ...sanitizeQuizForList(quiz),
   questions: quiz.questions.map((question) => ({
-    id: question.id,
+    id: question.id || question._id?.toString?.() || question._id,
+    _id: question._id?.toString?.() || question._id || question.id,
     text: question.text,
     options: question.options,
   })),

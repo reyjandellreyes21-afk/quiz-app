@@ -3,6 +3,7 @@ import { body } from "express-validator";
 import {
   createQuestion,
   createQuiz,
+  createQuizWithQuestions,
   deleteQuestion,
   deleteQuiz,
   getQuizByIdForPlay,
@@ -32,6 +33,20 @@ quizRouter.post(
   requireAuth,
   [body("title").trim().isLength({ min: 3 }), body("category").trim().isLength({ min: 2 }), validate],
   createQuiz,
+);
+quizRouter.post(
+  "/with-questions",
+  requireAuth,
+  [
+    body("title").trim().isLength({ min: 3 }),
+    body("category").trim().isLength({ min: 2 }),
+    body("questions").isArray({ min: 1 }),
+    body("questions.*.text").trim().isLength({ min: 5 }),
+    body("questions.*.options").isArray({ min: 2 }),
+    body("questions.*.correctAnswer").isString().trim().notEmpty(),
+    validate,
+  ],
+  createQuizWithQuestions,
 );
 quizRouter.put("/:quizId", requireAuth, updateQuiz);
 quizRouter.delete("/:quizId", requireAuth, deleteQuiz);

@@ -57,7 +57,44 @@ export const createQuiz = async (req, res, next) => {
     createdBy: req.user.id,
     questions: [],
   });
-  res.status(201).json(sanitizeQuizForList(quiz.toObject()));
+  const payload = sanitizeQuizForList(quiz.toObject());
+  res.status(201).json({
+    ...payload,
+    id: payload.id || quiz._id.toString(),
+    _id: payload._id || quiz._id.toString(),
+  });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createQuizWithQuestions = async (req, res, next) => {
+  try {
+    const { title, category, description = "", questions = [] } = req.body;
+    if (!Array.isArray(questions) || questions.length === 0) {
+      throw new AppError(422, "At least one question is required.");
+    }
+
+    const preparedQuestions = questions.map((question) => ({
+      text: question.text,
+      options: question.options,
+      correctAnswer: question.correctAnswer,
+    }));
+
+    const quiz = await Quiz.create({
+      title,
+      category,
+      description,
+      createdBy: req.user.id,
+      questions: preparedQuestions,
+    });
+
+    const payload = sanitizeQuizForList(quiz.toObject());
+    res.status(201).json({
+      ...payload,
+      id: payload.id || quiz._id.toString(),
+      _id: payload._id || quiz._id.toString(),
+    });
   } catch (error) {
     next(error);
   }

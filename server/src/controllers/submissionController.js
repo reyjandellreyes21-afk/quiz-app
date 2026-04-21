@@ -2,6 +2,8 @@ import { AppError } from "../errors/AppError.js";
 import { Attempt } from "../models/Attempt.js";
 import { Quiz } from "../models/Quiz.js";
 
+const normalizeAnswer = (value) => (typeof value === "string" ? value.trim().toLowerCase() : "");
+
 export const submitQuizAnswers = async (req, res, next) => {
   try {
     const quiz = await Quiz.findById(req.params.quizId);
@@ -17,7 +19,7 @@ export const submitQuizAnswers = async (req, res, next) => {
       : rawAnswers;
     const breakdown = quiz.questions.map((question) => {
       const submittedAnswer = answerMap[question.id.toString()];
-      const isCorrect = submittedAnswer === question.correctAnswer;
+      const isCorrect = normalizeAnswer(submittedAnswer) === normalizeAnswer(question.correctAnswer);
       return {
         questionId: question.id.toString(),
         submittedAnswer: submittedAnswer || null,
