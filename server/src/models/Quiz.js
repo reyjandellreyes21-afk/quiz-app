@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 const questionSchema = new mongoose.Schema(
   {
     text: { type: String, required: true, trim: true },
+    kind: { type: String, enum: ["mcq", "tf", "fill"], default: "mcq" },
     options: [{ type: String, required: true }],
     correctAnswer: { type: String, required: true },
   },

@@ -16,6 +16,7 @@ export const sanitizeQuizForPlayer = (quiz) => ({
     id: question.id || question._id?.toString?.() || question._id,
     _id: question._id?.toString?.() || question._id || question.id,
     text: question.text,
-    options: question.options,
+    kind: question.kind || "mcq",
+    options: question.options ?? [],
   })),
 });

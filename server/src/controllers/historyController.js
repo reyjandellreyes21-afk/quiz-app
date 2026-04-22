@@ -58,3 +58,13 @@ export const getAttemptById = async (req, res, next) => {
     next(error);
   }
 };
+
+/** Removes all rows for this user in MongoDB collection `attempts` (see Attempt model). */
+export const clearMyHistory = async (req, res, next) => {
+  try {
+    await Attempt.deleteMany({ userId: req.user.id });
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+};

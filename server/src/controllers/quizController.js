@@ -39,7 +39,8 @@ export const listQuizQuestions = async (req, res, next) => {
       quiz.questions.map((question) => ({
         id: question.id,
         text: question.text,
-        options: question.options,
+        kind: question.kind || "mcq",
+        options: question.options ?? [],
       })),
     );
   } catch (error) {
@@ -75,11 +76,23 @@ export const createQuizWithQuestions = async (req, res, next) => {
       throw new AppError(422, "At least one question is required.");
     }
 
-    const preparedQuestions = questions.map((question) => ({
-      text: question.text,
-      options: question.options,
-      correctAnswer: question.correctAnswer,
-    }));
+    const preparedQuestions = questions.map((question) => {
+      const kind = question.kind === "fill" ? "fill" : question.kind === "tf" ? "tf" : "mcq";
+      if (kind === "fill") {
+        return {
+          text: question.text,
+          kind: "fill",
+          options: [],
+          correctAnswer: question.correctAnswer,
+        };
+      }
+      return {
+        text: question.text,
+        kind,
+        options: question.options,
+        correctAnswer: question.correctAnswer,
+      };
+    });
 
     const quiz = await Quiz.create({
       title,
@@ -131,10 +144,12 @@ export const createQuestion = async (req, res, next) => {
   try {
     const quiz = await getQuizById(req.params.quizId);
     if (quiz.createdBy.toString() !== req.user.id) throw new AppError(403, "You can only edit your own quiz.");
+    const kind = req.body.kind === "fill" ? "fill" : req.body.kind === "tf" ? "tf" : "mcq";
 
     const question = {
       text: req.body.text,
-      options: req.body.options,
+      kind,
+      options: kind === "fill" ? [] : req.body.options,
       correctAnswer: req.body.correctAnswer,
     };
     quiz.questions.push(question);
@@ -152,9 +167,15 @@ export const updateQuestion = async (req, res, next) => {
     const question = quiz.questions.id(req.params.questionId);
     if (!question) throw new AppError(404, "Question not found.");
 
-    const { text, options, correctAnswer } = req.body;
+    const { text, options, correctAnswer, kind } = req.body;
     if (text !== undefined) question.text = text;
-    if (options !== undefined) question.options = options;
+    if (kind !== undefined) question.kind = kind;
+    const effectiveKind = question.kind === "fill" ? "fill" : question.kind === "tf" ? "tf" : "mcq";
+    if (effectiveKind === "fill") {
+      question.options = [];
+    } else if (options !== undefined) {
+      question.options = options;
+    }
     if (correctAnswer !== undefined) question.correctAnswer = correctAnswer;
     await quiz.save();
     res.json(question);
