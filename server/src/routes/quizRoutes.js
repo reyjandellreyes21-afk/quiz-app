@@ -6,6 +6,7 @@ import {
   createQuizWithQuestions,
   deleteQuestion,
   deleteQuiz,
+  generateQuizQuestions,
   getQuizByIdForPlay,
   listQuizQuestions,
   listQuizzes,
@@ -49,6 +50,21 @@ quizRouter.post(
     validate,
   ],
   createQuiz,
+);
+quizRouter.post(
+  "/generate",
+  requireAuth,
+  [
+    body("title").trim().isLength({ min: 3 }).withMessage("Quiz title must be at least 3 characters."),
+    body("category").trim().isLength({ min: 2 }).withMessage("Category must be at least 2 characters."),
+    body("description").optional().isString(),
+    body("questionCount")
+      .optional()
+      .isInt({ min: 1, max: 20 })
+      .withMessage("Question count must be between 1 and 20."),
+    validate,
+  ],
+  generateQuizQuestions,
 );
 quizRouter.post(
   "/with-questions",

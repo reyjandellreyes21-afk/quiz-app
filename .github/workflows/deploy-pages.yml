@@ -36,6 +36,8 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_GOOGLE_CLIENT_ID: 778095525033-cumc4hh7o62chpdcf0ke4e7q02qhg0up.apps.googleusercontent.com
         run: npm run build
 
       - name: Upload Pages artifact

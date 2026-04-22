@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import qaLogo from "./assets/QA-logo.png";
 
 /**
  * Dev: call the API on its own origin. The Vite proxy (`/api` → 4000) can 404 some POST routes
@@ -100,6 +101,28 @@ const toEditableQuestion = (question) => {
     text: question.text || "",
     kind,
     options,
+    correctOptionIndex: matchedIndex >= 0 ? matchedIndex : 0,
+    blankAnswer: "",
+  };
+};
+const toCreateDraftQuestion = (question) => {
+  const kind = normalizeQuestionKind(question.kind);
+  if (kind === "fill") {
+    return {
+      text: question.text || "",
+      kind: "fill",
+      options: [],
+      blankAnswer: question.correctAnswer || "",
+      correctOptionIndex: 0,
+    };
+  }
+  const options = Array.isArray(question.options) ? question.options : [];
+  const safeOptions = kind === "tf" ? ["True", "False"] : options.length >= 2 ? options : ["", "", "", ""];
+  const matchedIndex = safeOptions.findIndex((opt) => String(opt).trim() === String(question.correctAnswer || "").trim());
+  return {
+    text: question.text || "",
+    kind,
+    options: safeOptions,
     correctOptionIndex: matchedIndex >= 0 ? matchedIndex : 0,
     blankAnswer: "",
   };
@@ -220,6 +243,12 @@ function LandingIllustration() {
       <circle cx="416" cy="120" r="28" fill="#2e266f" opacity="0.95" />
       <path d="M408 120l6 6 14-16" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
+  );
+}
+
+function QuizAppLogo({ className = "h-9 w-9" }) {
+  return (
+    <img src={qaLogo} alt="Quiz App logo" className={`rounded-xl object-cover shadow-sm ${className}`} />
   );
 }
 
@@ -344,8 +373,16 @@ function App() {
   const [submitError, setSubmitError] = useState("");
   const [quizzesRefreshTick, setQuizzesRefreshTick] = useState(0);
 
-  const [createState, setCreateState] = useState({ title: "", category: "", description: "", questions: [buildEmptyQuestion()] });
+  const [createState, setCreateState] = useState({
+    title: "",
+    category: "",
+    description: "",
+    generatorProvider: "manual",
+    generatorQuestionCount: 5,
+    questions: [buildEmptyQuestion()],
+  });
   const [createMessage, setCreateMessage] = useState("");
+  const [createGeneratorLoading, setCreateGeneratorLoading] = useState(false);
   const [editState, setEditState] = useState({ quizId: "", title: "", category: "", description: "", questions: [] });
   const [editRemovedQuestionIds, setEditRemovedQuestionIds] = useState([]);
   const [editLoading, setEditLoading] = useState(false);
@@ -354,6 +391,21 @@ function App() {
   const [quizMessage, setQuizMessage] = useState("");
 
   const googleBtnRef = useRef(null);
+
+  useEffect(() => {
+    const ensureIconLink = (selector, rel) => {
+      let link = document.querySelector(selector);
+      if (!link) {
+        link = document.createElement("link");
+        link.setAttribute("rel", rel);
+        document.head.appendChild(link);
+      }
+      link.setAttribute("href", qaLogo);
+      link.setAttribute("type", "image/png");
+    };
+    ensureIconLink('link[rel="icon"]', "icon");
+    ensureIconLink('link[rel="apple-touch-icon"]', "apple-touch-icon");
+  }, []);
 
   const submitQuiz = useCallback(async () => {
     if (!activeQuiz) return;
@@ -790,6 +842,45 @@ function App() {
     return { ...prev, questions: next };
   });
 
+  const handleGenerateQuestions = async () => {
+    setCreateMessage("");
+    const normalizedTitle = toTitleCase(createState.title);
+    const normalizedCategory = toTitleCase(createState.category);
+    if (!normalizedTitle || !normalizedCategory) {
+      setCreateMessage("Add title and category first so Gemini can generate relevant questions.");
+      return;
+    }
+    setCreateGeneratorLoading(true);
+    try {
+      const data = await apiRequest("/quizzes/generate", {
+        method: "POST",
+        token,
+        body: {
+          title: normalizedTitle,
+          category: normalizedCategory,
+          description: createState.description.trim(),
+          questionCount: Number(createState.generatorQuestionCount) || 5,
+        },
+      });
+      const generatedQuestions = Array.isArray(data?.questions) ? data.questions.map(toCreateDraftQuestion) : [];
+      if (!generatedQuestions.length) {
+        setCreateMessage("Gemini did not return valid questions. Try a more specific topic.");
+        return;
+      }
+      setCreateState((prev) => ({
+        ...prev,
+        title: normalizedTitle,
+        category: normalizedCategory,
+        questions: generatedQuestions,
+      }));
+      setCreateMessage(`Generated ${generatedQuestions.length} question${generatedQuestions.length === 1 ? "" : "s"} with Gemini.`);
+    } catch (error) {
+      setCreateMessage(error.message || "Unable to generate questions right now.");
+    } finally {
+      setCreateGeneratorLoading(false);
+    }
+  };
+
   const handleCreateQuiz = async (event) => {
     event.preventDefault();
     setCreateMessage("");
@@ -836,7 +927,14 @@ function App() {
       });
       setCreateState((prev) => ({ ...prev, title: normalizedTitle, category: normalizedCategory }));
       setCreateMessage("Quiz published successfully.");
-      setCreateState({ title: "", category: "", description: "", questions: [buildEmptyQuestion()] });
+      setCreateState({
+        title: "",
+        category: "",
+        description: "",
+        generatorProvider: "manual",
+        generatorQuestionCount: 5,
+        questions: [buildEmptyQuestion()],
+      });
       setQuizzesRefreshTick((prev) => prev + 1);
       setActiveView(VIEWS.BROWSE);
     } catch (error) {
@@ -955,7 +1053,7 @@ function App() {
         <header className="landing-nav">
           <div className="app-container flex h-16 items-center justify-between gap-3">
             <div className="flex min-w-0 items-center gap-2.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-primary text-xs font-bold text-white shadow-sm">QZ</div>
+              <QuizAppLogo className="h-9 w-9 shrink-0" />
               <span className="truncate text-lg font-semibold tracking-tight text-neutral-900">Quiz App</span>
             </div>
             <nav className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="Sign in">
@@ -973,24 +1071,83 @@ function App() {
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
             <section className="space-y-6">
               <p className="inline-flex rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm">
-                Quiz SaaS
+                Play. Learn. Compete.
               </p>
               <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-neutral-900 sm:text-5xl sm:leading-[1.05]">
-                Make learning fun with <span className="text-brand-primary">quizzes</span>
+                Compete in live quizzes and level up your <span className="text-brand-primary">knowledge daily</span>
               </h1>
               <p className="max-w-lg text-lg leading-relaxed text-neutral-600">
-                Build, take, and track quizzes in a calm, focused interface—great for practice, onboarding, and quick knowledge checks.
+                Join challenges, track your streak, and climb the leaderboard with short quizzes designed to make progress feel addictive.
               </p>
-              <div className="flex flex-wrap gap-3 pt-1">
+              <div className="flex flex-wrap items-center gap-3 pt-1">
                 <button type="button" className="landing-hero-cta" onClick={() => openAuthPanel("signup")}>
-                  Get started for free
+                  Start quiz journey
                 </button>
+                <button type="button" className="btn-secondary rounded-full px-6" onClick={() => openAuthPanel("login")}>
+                  I already have an account
+                </button>
+              </div>
+              <div className="grid max-w-xl grid-cols-1 gap-2 pt-2 text-sm text-neutral-700 sm:grid-cols-3">
+                <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
+                  <span className="block text-lg font-bold text-neutral-900">10k+</span>
+                  Quizzes played
+                </div>
+                <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
+                  <span className="block text-lg font-bold text-neutral-900">4.8/5</span>
+                  User rating
+                </div>
+                <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
+                  <span className="block text-lg font-bold text-neutral-900">15 sec</span>
+                  Quick signup
+                </div>
               </div>
             </section>
             <div className="flex justify-center lg:justify-end">
               <LandingIllustration />
             </div>
           </div>
+
+          <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:mt-14 md:p-6">
+            <p className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-500">Loved by students and self-learners</p>
+            <div className="mt-4 grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
+              {["STEM Learners", "Board Reviewers", "Developers", "Upskill Teams"].map((group) => (
+                <div key={group} className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 font-medium text-neutral-700">
+                  {group}
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <article className="app-card">
+              <p className="text-sm font-semibold text-brand-primary">Daily Challenges</p>
+              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Build streaks that keep you consistent</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Take one short challenge each day and protect your momentum while learning faster.</p>
+            </article>
+            <article className="app-card">
+              <p className="text-sm font-semibold text-brand-primary">Leaderboard Mode</p>
+              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Compete and track real progress</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">See your rank, improve your best score, and unlock a stronger reason to come back tomorrow.</p>
+            </article>
+            <article className="app-card sm:col-span-2 lg:col-span-1">
+              <p className="text-sm font-semibold text-brand-primary">Instant Feedback</p>
+              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Know what to fix right away</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Every attempt shows your score breakdown so you can improve by topic, not by guesswork.</p>
+            </article>
+          </section>
+
+          <section className="mt-8 rounded-2xl border border-brand-border bg-brand-soft/40 p-6 text-center md:mt-10">
+            <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Ready to test your knowledge?</h2>
+            <p className="mt-2 text-sm text-neutral-700">No credit card required. Create your account and play your first quiz in under a minute.</p>
+            <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
+              <button type="button" className="landing-hero-cta" onClick={() => openAuthPanel("signup")}>
+                Join quiz app free
+              </button>
+              <button type="button" className="btn-secondary rounded-full px-6" onClick={() => openAuthPanel("login")}>
+                Log in
+              </button>
+            </div>
+          </section>
         </main>
 
         {authPanelVisible && (
@@ -1017,8 +1174,8 @@ function App() {
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-neutral-600">
                     {authMode === "signup"
-                      ? "Add your details below—then you can publish and take quizzes."
-                      : "Sign in with email or Google to see your dashboard and history."}
+                      ? "Create your account to start daily challenges and track your streak."
+                      : "Sign in with email or Google to continue your quiz streak."}
                   </p>
                 </div>
 
@@ -1201,15 +1358,21 @@ function App() {
     <div className="min-h-screen bg-white">
       <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur">
         <div className="app-container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-brand-primary to-brand-hover p-px shadow-sm">
-              <div className="flex h-full w-full items-center justify-center rounded-[10px] bg-white text-xs font-bold text-brand-primary">QZ</div>
-            </div>
+          <button
+            type="button"
+            className="flex items-center gap-3 rounded-xl px-1 py-1 text-left focus:outline-none"
+            onClick={() => {
+              setActiveView(VIEWS.DASHBOARD);
+              setMobileMenuOpen(false);
+            }}
+            aria-label="Go to dashboard"
+          >
+            <QuizAppLogo className="h-9 w-9 shrink-0" />
             <div>
               <p className="text-sm font-semibold text-neutral-900">Quiz App</p>
               <p className="text-xs text-neutral-500">Modern learning SaaS</p>
             </div>
-          </div>
+          </button>
           <nav className="hidden items-center gap-2 md:flex" aria-label="Main">
             {renderNavButton(VIEWS.DASHBOARD, "Dashboard")}
             {renderNavButton(VIEWS.BROWSE, "Browse")}
@@ -1758,6 +1921,77 @@ function App() {
                   value={createState.description}
                   onChange={(e) => setCreateState((prev) => ({ ...prev, description: e.target.value }))}
                 />
+              </div>
+              <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-indigo-50 to-fuchsia-50 p-4 shadow-sm">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-violet-300/25 blur-2xl" />
+                <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-fuchsia-300/20 blur-2xl" />
+                <div className="relative">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">AI Assistant</p>
+                  <p className="mt-1 text-sm font-semibold text-violet-950">Quiz generator</p>
+                  <p className="mt-1 text-xs text-violet-700/90">Switch to Gemini to auto-create questions from your topic.</p>
+                </div>
+                <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                  <div className="sm:col-span-1">
+                    <label className="label-base text-violet-900">Provider</label>
+                    <div className="relative mt-1">
+                      <select
+                        className="input-base appearance-none border-violet-200 bg-white/90 pr-10 focus:border-violet-500 focus:ring-violet-500/25"
+                        value={createState.generatorProvider}
+                        onChange={(e) => setCreateState((prev) => ({ ...prev, generatorProvider: e.target.value }))}
+                      >
+                        <option value="manual">Manual</option>
+                        <option value="gemini">Gemini</option>
+                      </select>
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-600" />
+                    </div>
+                  </div>
+                  <div
+                    className={`contents transition-all duration-300 ease-out ${
+                      createState.generatorProvider === "gemini"
+                        ? "opacity-100"
+                        : "pointer-events-none opacity-0"
+                    }`}
+                    aria-hidden={createState.generatorProvider !== "gemini"}
+                  >
+                    <div
+                      className={`sm:col-span-1 overflow-hidden transition-all duration-300 ease-out ${
+                        createState.generatorProvider === "gemini" ? "max-h-40 translate-y-0" : "max-h-0 -translate-y-1"
+                      }`}
+                    >
+                      <label className="label-base text-violet-900">Question count</label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={20}
+                        className="input-base mt-1 border-violet-200 bg-white/90 focus:border-violet-500 focus:ring-violet-500/25"
+                        value={createState.generatorQuestionCount}
+                        onChange={(e) =>
+                          setCreateState((prev) => ({
+                            ...prev,
+                            generatorQuestionCount: Math.min(20, Math.max(1, Number(e.target.value) || 1)),
+                          }))
+                        }
+                      />
+                    </div>
+                    <div
+                      className={`sm:col-span-1 sm:self-end overflow-hidden transition-all duration-300 ease-out ${
+                        createState.generatorProvider === "gemini" ? "max-h-40 translate-y-0" : "max-h-0 -translate-y-1"
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        className="btn-base w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700"
+                        onClick={handleGenerateQuestions}
+                        disabled={createGeneratorLoading}
+                      >
+                        {createGeneratorLoading ? "Generating..." : "Generate with Gemini"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-3 text-xs text-violet-700/90">
+                  Pick Gemini to auto-fill questions from title/category/description, then review before publishing.
+                </p>
               </div>
               <div className="space-y-3">
                 {createState.questions.map((question, qIndex) => {

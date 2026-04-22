@@ -1,4 +1,5 @@
 import { AppError } from "../errors/AppError.js";
+import { config } from "../config/config.js";
 import { sanitizeQuizForList, sanitizeQuizForPlayer } from "../utils/sanitize.js";
 import { Quiz } from "../models/Quiz.js";
 
@@ -108,6 +109,108 @@ export const createQuizWithQuestions = async (req, res, next) => {
       id: payload.id || quiz._id.toString(),
       _id: payload._id || quiz._id.toString(),
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const normalizeGeneratedKind = (value) => {
+  if (value === "tf") return "tf";
+  if (value === "fill") return "fill";
+  return "mcq";
+};
+
+const cleanGeneratedQuestions = (rawQuestions = [], requestedCount = 5) => {
+  const cleaned = [];
+  for (const raw of rawQuestions) {
+    if (cleaned.length >= requestedCount) break;
+    const text = String(raw?.text || "").trim();
+    if (text.length < 5) continue;
+    const kind = normalizeGeneratedKind(raw?.kind);
+    if (kind === "fill") {
+      const correctAnswer = String(raw?.correctAnswer || "").trim();
+      if (!correctAnswer) continue;
+      cleaned.push({ text, kind: "fill", options: [], correctAnswer });
+      continue;
+    }
+    let options = Array.isArray(raw?.options) ? raw.options.map((opt) => String(opt || "").trim()).filter(Boolean) : [];
+    if (kind === "tf") {
+      options = ["True", "False"];
+    }
+    if (options.length < 2) continue;
+    const correctAnswer = String(raw?.correctAnswer || "").trim();
+    if (!correctAnswer || !options.includes(correctAnswer)) continue;
+    cleaned.push({ text, kind, options, correctAnswer });
+  }
+  return cleaned;
+};
+
+export const generateQuizQuestions = async (req, res, next) => {
+  try {
+    if (!config.geminiApiKey) {
+      throw new AppError(503, "Gemini is not configured. Add GEMINI_API_KEY in server/.env and restart the API.");
+    }
+
+    const title = String(req.body.title || "").trim();
+    const category = String(req.body.category || "").trim();
+    const description = String(req.body.description || "").trim();
+    const questionCount = Math.min(20, Math.max(1, Number(req.body.questionCount) || 5));
+
+    const prompt = [
+      "You are generating quiz questions for a learning app.",
+      `Topic title: ${title}`,
+      `Category: ${category}`,
+      `Description: ${description || "No description provided."}`,
+      `Generate exactly ${questionCount} questions.`,
+      "Output strict JSON only (no markdown, no explanation) using this shape:",
+      '{"questions":[{"text":"...","kind":"mcq|tf|fill","options":["..."],"correctAnswer":"..."}]}',
+      "Rules:",
+      "- text must be at least 5 characters.",
+      "- For kind=mcq, include 4 options and correctAnswer must match one option exactly.",
+      "- For kind=tf, options must be [\"True\",\"False\"], and correctAnswer must be either \"True\" or \"False\".",
+      "- For kind=fill, options must be an empty array and correctAnswer must be non-empty.",
+      "- Keep language clear and suitable for students.",
+    ].join("\n");
+
+    const geminiResponse = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(config.geminiModel)}:generateContent?key=${encodeURIComponent(config.geminiApiKey)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ role: "user", parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.4,
+            responseMimeType: "application/json",
+          },
+        }),
+      },
+    );
+
+    const payload = await geminiResponse.json().catch(() => null);
+    if (!geminiResponse.ok) {
+      const providerMessage = payload?.error?.message || `Gemini request failed (${geminiResponse.status}).`;
+      throw new AppError(502, providerMessage);
+    }
+
+    const rawText = payload?.candidates?.[0]?.content?.parts?.map((part) => part?.text || "").join("").trim();
+    if (!rawText) {
+      throw new AppError(502, "Gemini returned an empty response.");
+    }
+
+    let parsed;
+    try {
+      parsed = JSON.parse(rawText);
+    } catch {
+      throw new AppError(502, "Gemini response could not be parsed as JSON.");
+    }
+
+    const questions = cleanGeneratedQuestions(parsed?.questions, questionCount);
+    if (!questions.length) {
+      throw new AppError(502, "Gemini returned no valid questions. Try a clearer topic or description.");
+    }
+
+    res.json({ questions });
   } catch (error) {
     next(error);
   }
