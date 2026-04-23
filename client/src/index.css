@@ -1,0 +1,126 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  /* Keeps layout width stable when scrollbar appears/disappears between views */
+  html {
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    @apply m-0 bg-app text-text-primary font-sans antialiased;
+  }
+
+  #root {
+    @apply min-h-screen;
+  }
+}
+
+@layer components {
+  .app-container {
+    @apply mx-auto w-full max-w-7xl px-4 md:px-6;
+  }
+
+  .app-card {
+    @apply rounded-2xl border border-neutral-200 bg-white p-5 shadow-sm;
+  }
+
+  .app-card-interactive {
+    @apply app-card transition duration-200 ease-out hover:-translate-y-0.5 hover:border-brand-border hover:shadow-md;
+  }
+
+  .btn-base {
+    @apply h-11 rounded-xl px-4 py-2.5 text-sm font-semibold transition duration-200 ease-out focus:outline-none focus:ring-2 focus:ring-brand-primary/35;
+  }
+
+  .btn-primary {
+    @apply btn-base bg-brand-primary text-white hover:bg-brand-hover;
+  }
+
+  .btn-secondary {
+    @apply btn-base border border-neutral-200 bg-white text-neutral-800 hover:bg-neutral-50;
+  }
+
+  .btn-ghost {
+    @apply btn-base bg-transparent text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900;
+  }
+
+  .btn-danger {
+    @apply btn-base border border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-50;
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/25;
+  }
+
+  .label-base {
+    @apply mb-1.5 block text-sm text-neutral-700;
+  }
+
+  .meta-label {
+    @apply text-xs uppercase tracking-wide text-neutral-500;
+  }
+
+  /* Landing + auth modal (logged-out) */
+  .landing-shell {
+    @apply min-h-screen bg-white text-neutral-900 antialiased [color-scheme:light];
+  }
+
+  .landing-nav {
+    @apply sticky top-0 z-40 border-b border-neutral-200 bg-white/95 shadow-sm backdrop-blur;
+  }
+
+  .landing-card {
+    @apply rounded-2xl border border-neutral-200 bg-white p-6 shadow-xl shadow-neutral-200/80 sm:p-8;
+  }
+
+  .landing-input {
+    @apply w-full rounded-xl border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-900 shadow-sm outline-none placeholder:text-neutral-400 focus:border-brand-primary focus:ring-2 focus:ring-brand-primary/25;
+  }
+
+  .landing-btn-primary {
+    @apply inline-flex h-12 w-full items-center justify-center rounded-full bg-brand-primary text-sm font-semibold text-white shadow-md shadow-brand-primary/25 transition hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-55;
+  }
+
+  .landing-btn-nav-text {
+    @apply px-1 text-sm font-medium text-neutral-900 transition hover:text-neutral-600;
+  }
+
+  .landing-btn-nav-primary {
+    @apply inline-flex h-10 items-center justify-center rounded-full bg-brand-primary px-5 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-hover;
+  }
+
+  .landing-auth-close {
+    @apply absolute right-2 top-2 flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-2xl leading-none text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-900 focus:outline-none focus:ring-2 focus:ring-brand-primary/35;
+  }
+
+  .landing-auth-panel {
+    animation: landing-auth-in 0.35s ease-out both;
+  }
+
+  @keyframes landing-auth-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .landing-hero-cta {
+    @apply inline-flex h-12 items-center justify-center rounded-full bg-brand-primary px-8 text-sm font-semibold text-white shadow-lg shadow-brand-primary/25 transition hover:bg-brand-hover;
+  }
+
+  .landing-link {
+    @apply text-sm font-medium text-brand-primary underline-offset-4 hover:underline;
+  }
+}
