@@ -491,7 +491,7 @@ function App() {
   const accountMenuRef = useRef(null);
   const [theme, setTheme] = useState(() => {
     try {
-      return typeof window !== "undefined" && localStorage.getItem("quiz_theme") === "dark" ? "dark" : "light";
+      return typeof window !== "undefined" && localStorage.getItem("quiz_theme_v2") === "dark" ? "dark" : "light";
     } catch {
       return "light";
     }
@@ -558,7 +558,7 @@ function App() {
   useEffect(() => {
     if (theme === "dark") document.documentElement.classList.add("dark");
     else document.documentElement.classList.remove("dark");
-    localStorage.setItem("quiz_theme", theme);
+    localStorage.setItem("quiz_theme_v2", theme);
   }, [theme]);
 
   useEffect(() => {

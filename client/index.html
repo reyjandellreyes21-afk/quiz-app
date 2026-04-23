@@ -5,9 +5,10 @@
     <script>
       (function () {
         try {
-          var t = localStorage.getItem("quiz_theme");
+          var t = localStorage.getItem("quiz_theme_v2");
           if (t === "dark") document.documentElement.classList.add("dark");
           else document.documentElement.classList.remove("dark");
+          localStorage.removeItem("quiz_theme");
         } catch (e) {}
       })();
     </script>
