@@ -489,9 +489,13 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef(null);
-  const [theme, setTheme] = useState(() =>
-    typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light",
-  );
+  const [theme, setTheme] = useState(() => {
+    try {
+      return typeof window !== "undefined" && localStorage.getItem("quiz_theme") === "dark" ? "dark" : "light";
+    } catch {
+      return "light";
+    }
+  });
   const [landingExamSlide, setLandingExamSlide] = useState(0);
   const [usersList, setUsersList] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
