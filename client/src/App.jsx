@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import qaLogo from "./assets/QA-logo.png";
+import websiteLeadersImage from "./assets/website-leaders.png";
 
 /**
  * Dev: call the API on its own origin. The Vite proxy (`/api` → 4000) can 404 some POST routes
@@ -216,33 +217,32 @@ const getStreakDays = (attempts) => {
   return streak;
 };
 
+const defaultHomePosts = [
+  {
+    id: "seed-1",
+    author: "Ana Dela Cruz",
+    role: "Civil Service Reviewee",
+    content:
+      "Anyone reviewing for the Civil Service Professional exam this month? I made a quick reviewer for analogy and grammar. I can share it if you need.",
+    timeLabel: "2h ago",
+    likes: 18,
+    comments: 7,
+  },
+  {
+    id: "seed-2",
+    author: "Mark Santos",
+    role: "PRC Board Exam Taker",
+    content:
+      "Sharing my routine: 50-item mock quiz every night + 30 mins discussion with my study buddy. Huge help for retention.",
+    timeLabel: "4h ago",
+    likes: 24,
+    comments: 10,
+  },
+];
+
 function LandingIllustration() {
   return (
-    <svg className="h-auto w-full max-w-xl drop-shadow-2xl" viewBox="0 0 520 380" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-      <defs>
-        <linearGradient id="qz-grad" x1="56" y1="32" x2="480" y2="340" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#2e266f" />
-          <stop offset="1" stopColor="#e9e5f7" />
-        </linearGradient>
-        <linearGradient id="qz-screen" x1="120" y1="88" x2="400" y2="288" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#F8FAFC" />
-          <stop offset="1" stopColor="#E2E8F0" />
-        </linearGradient>
-      </defs>
-      <rect x="48" y="220" width="424" height="24" rx="8" fill="#CBD5E1" />
-      <rect x="64" y="72" width="392" height="248" rx="18" fill="url(#qz-grad)" opacity="0.92" />
-      <rect x="84" y="92" width="352" height="208" rx="12" fill="url(#qz-screen)" />
-      <text x="120" y="130" fill="#64748B" fontFamily="Inter, sans-serif" fontSize="13" fontWeight="600">
-        LIVE RESULTS
-      </text>
-      <rect x="104" y="148" width="56" height="120" rx="6" fill="#2e266f" opacity="0.9" />
-      <rect x="176" y="168" width="56" height="100" rx="6" fill="#4c3f9e" opacity="0.85" />
-      <rect x="248" y="128" width="56" height="140" rx="6" fill="#6d5bd4" opacity="0.85" />
-      <rect x="320" y="188" width="56" height="80" rx="6" fill="#1e1650" opacity="0.85" />
-      <path d="M96 260h328" stroke="#CBD5E1" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="416" cy="120" r="28" fill="#2e266f" opacity="0.95" />
-      <path d="M408 120l6 6 14-16" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <img src={websiteLeadersImage} alt="Exam community leaders" className="h-auto w-full max-w-xl drop-shadow-2xl" />
   );
 }
 
@@ -389,6 +389,11 @@ function App() {
   const [editSaving, setEditSaving] = useState(false);
   const [editMessage, setEditMessage] = useState("");
   const [quizMessage, setQuizMessage] = useState("");
+  const [homePostDraft, setHomePostDraft] = useState("");
+  const [homePosts, setHomePosts] = useState(defaultHomePosts);
+  const [likedPostIds, setLikedPostIds] = useState({});
+  const [postComments, setPostComments] = useState({});
+  const [commentDraftByPost, setCommentDraftByPost] = useState({});
 
   const googleBtnRef = useRef(null);
 
@@ -1068,37 +1073,44 @@ function App() {
         </header>
 
         <main className="app-container pb-20 pt-10 md:pb-28 md:pt-14">
-          <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+          <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr] lg:items-center lg:gap-14">
             <section className="space-y-6">
               <p className="inline-flex rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm">
-                Play. Learn. Compete.
+                Philippines Exam Community
               </p>
               <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-neutral-900 sm:text-5xl sm:leading-[1.05]">
-                Compete in live quizzes and level up your <span className="text-brand-primary">knowledge daily</span>
+                A learning forum for <span className="text-brand-primary">Filipino exam takers</span>
               </h1>
-              <p className="max-w-lg text-lg leading-relaxed text-neutral-600">
-                Join challenges, track your streak, and climb the leaderboard with short quizzes designed to make progress feel addictive.
+              <p className="text-lg leading-relaxed text-neutral-600">
+                Exchange knowledge, share reviewers, and test your readiness before Civil Service, PRC, Bar, NAPOLCOM, and other Philippine exams.
               </p>
+              <div className="grid gap-2 text-sm text-neutral-700 sm:grid-cols-2">
+                {["Topic-based discussion threads", "Peer-reviewed practice questions", "Study buddy accountability groups", "Weekly mock quiz events"].map((point) => (
+                  <p key={point} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
+                    {point}
+                  </p>
+                ))}
+              </div>
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <button type="button" className="landing-hero-cta" onClick={() => openAuthPanel("signup")}>
-                  Start quiz journey
+                  Join Exam Forum
                 </button>
                 <button type="button" className="btn-secondary rounded-full px-6" onClick={() => openAuthPanel("login")}>
-                  I already have an account
+                  Continue learning
                 </button>
               </div>
-              <div className="grid max-w-xl grid-cols-1 gap-2 pt-2 text-sm text-neutral-700 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-2 pt-2 text-sm text-neutral-700 sm:grid-cols-3">
                 <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
-                  <span className="block text-lg font-bold text-neutral-900">10k+</span>
-                  Quizzes played
+                  <span className="block text-lg font-bold text-neutral-900">12k+</span>
+                  Forum posts
                 </div>
                 <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
-                  <span className="block text-lg font-bold text-neutral-900">4.8/5</span>
-                  User rating
+                  <span className="block text-lg font-bold text-neutral-900">250+</span>
+                  Mock quizzes
                 </div>
                 <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
-                  <span className="block text-lg font-bold text-neutral-900">15 sec</span>
-                  Quick signup
+                  <span className="block text-lg font-bold text-neutral-900">24/7</span>
+                  Peer support
                 </div>
               </div>
             </section>
@@ -1108,9 +1120,9 @@ function App() {
           </div>
 
           <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:mt-14 md:p-6">
-            <p className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-500">Loved by students and self-learners</p>
+            <p className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-500">Choose your target exam</p>
             <div className="mt-4 grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
-              {["STEM Learners", "Board Reviewers", "Developers", "Upskill Teams"].map((group) => (
+              {["Civil Service", "PRC Licensure", "Bar Exam", "NAPOLCOM & DEPED"].map((group) => (
                 <div key={group} className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 font-medium text-neutral-700">
                   {group}
                 </div>
@@ -1120,28 +1132,28 @@ function App() {
 
           <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <article className="app-card">
-              <p className="text-sm font-semibold text-brand-primary">Daily Challenges</p>
-              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Build streaks that keep you consistent</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Take one short challenge each day and protect your momentum while learning faster.</p>
+              <p className="text-sm font-semibold text-brand-primary">Guided Discussions</p>
+              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Clarify difficult topics faster</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Discuss confusing concepts with fellow reviewees and learn from practical explanations.</p>
             </article>
             <article className="app-card">
-              <p className="text-sm font-semibold text-brand-primary">Leaderboard Mode</p>
-              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Compete and track real progress</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">See your rank, improve your best score, and unlock a stronger reason to come back tomorrow.</p>
+              <p className="text-sm font-semibold text-brand-primary">Resource Exchange</p>
+              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Get quality reviewers and drills</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Access community-shared notes, flashcards, and mock tests by exam category.</p>
             </article>
             <article className="app-card sm:col-span-2 lg:col-span-1">
-              <p className="text-sm font-semibold text-brand-primary">Instant Feedback</p>
-              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Know what to fix right away</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Every attempt shows your score breakdown so you can improve by topic, not by guesswork.</p>
+              <p className="text-sm font-semibold text-brand-primary">Study Buddy Matching</p>
+              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Stay consistent until exam day</h3>
+              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Pair up with exam buddies for daily check-ins, goal tracking, and motivation.</p>
             </article>
           </section>
 
           <section className="mt-8 rounded-2xl border border-brand-border bg-brand-soft/40 p-6 text-center md:mt-10">
-            <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Ready to test your knowledge?</h2>
-            <p className="mt-2 text-sm text-neutral-700">No credit card required. Create your account and play your first quiz in under a minute.</p>
+            <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Start your review journey with people who get it</h2>
+            <p className="mt-2 text-sm text-neutral-700">Build confidence, sharpen your weak areas, and prepare smarter with a supportive exam community.</p>
             <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
               <button type="button" className="landing-hero-cta" onClick={() => openAuthPanel("signup")}>
-                Join quiz app free
+                Create free account
               </button>
               <button type="button" className="btn-secondary rounded-full px-6" onClick={() => openAuthPanel("login")}>
                 Log in
@@ -1174,8 +1186,8 @@ function App() {
                   </h2>
                   <p className="mt-2 text-sm leading-relaxed text-neutral-600">
                     {authMode === "signup"
-                      ? "Create your account to start daily challenges and track your streak."
-                      : "Sign in with email or Google to continue your quiz streak."}
+                      ? "Create your account to join exam-focused groups and start your review plan."
+                      : "Sign in with email or Google to continue your forum and review progress."}
                   </p>
                 </div>
 
@@ -1374,7 +1386,7 @@ function App() {
             </div>
           </button>
           <nav className="hidden items-center gap-2 md:flex" aria-label="Main">
-            {renderNavButton(VIEWS.DASHBOARD, "Dashboard")}
+            {renderNavButton(VIEWS.DASHBOARD, "Home")}
             {renderNavButton(VIEWS.BROWSE, "Browse")}
             {renderNavButton(VIEWS.HISTORY, "History")}
             {renderNavButton(VIEWS.CREATE, "Create")}
@@ -1431,7 +1443,7 @@ function App() {
         {mobileMenuOpen && (
           <div className="app-container pb-3 md:hidden">
             <div className="app-card flex flex-col gap-2 p-3">
-              {renderNavButton(VIEWS.DASHBOARD, "Dashboard")}
+              {renderNavButton(VIEWS.DASHBOARD, "Home")}
               {renderNavButton(VIEWS.BROWSE, "Browse")}
               {renderNavButton(VIEWS.HISTORY, "History")}
               {renderNavButton(VIEWS.CREATE, "Create")}
@@ -1469,64 +1481,158 @@ function App() {
       <main className="app-container space-y-4 py-6 md:space-y-6">
         {activeView === VIEWS.DASHBOARD && (
           <section className="space-y-4 md:space-y-6">
-            {dashboardLoading && <p className="text-sm text-neutral-600">Loading dashboard...</p>}
+            {dashboardLoading && <p className="text-sm text-neutral-600">Loading home feed...</p>}
             {dashboardError && <p className="text-sm text-rose-700">{dashboardError}</p>}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              {[
-                { label: "Quizzes Taken", value: dashboard.totalAttempts || 0 },
-                { label: "Average Score", value: `${dashboard.averageScore || 0}%` },
-                { label: "Best Score", value: `${dashboard.bestScore || 0}%` },
-                { label: "Current Streak", value: `${streakDays} days` },
-              ].map((stat) => (
-                <article key={stat.label} className="app-card p-4">
-                  <p className="meta-label">{stat.label}</p>
-                  <p className="mt-2 text-2xl font-semibold">{stat.value}</p>
-                </article>
-              ))}
-            </div>
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
-              <article className="app-card lg:col-span-2">
-                <h2 className="text-2xl font-semibold">Performance</h2>
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="meta-label">Category Focus</p>
-                    <p className="mt-1 text-sm text-neutral-700">Tech and Science are your strongest categories.</p>
+              <div className="space-y-4 lg:col-span-2">
+                <article className="app-card">
+                  <h2 className="text-xl font-semibold">What's on your mind?</h2>
+                  <p className="mt-1 text-sm text-neutral-600">Share tips, ask questions, or post your exam progress.</p>
+                  <textarea
+                    className="input-base mt-3 min-h-[110px] resize-y"
+                    placeholder="Post something helpful for your fellow examinees..."
+                    value={homePostDraft}
+                    onChange={(e) => setHomePostDraft(e.target.value)}
+                  />
+                  <div className="mt-3 flex justify-end">
+                    <button
+                      type="button"
+                      className="btn-primary px-6 disabled:opacity-50"
+                      disabled={!homePostDraft.trim()}
+                      onClick={() => {
+                        const content = homePostDraft.trim();
+                        if (!content) return;
+                        setHomePosts((prev) => [
+                          {
+                            id: `post-${Date.now()}`,
+                            author: formatDisplayName(user?.name || "You") || "You",
+                            role: "Forum Member",
+                            content,
+                            timeLabel: "Just now",
+                            likes: 0,
+                            comments: 0,
+                          },
+                          ...prev,
+                        ]);
+                        setHomePostDraft("");
+                      }}
+                    >
+                      Post
+                    </button>
                   </div>
-                  <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="meta-label">Improvement Goal</p>
-                    <p className="mt-1 text-sm text-neutral-700">Reach 80% average this week to unlock the Expert badge.</p>
-                  </div>
-                </div>
-              </article>
-              <article className="app-card relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-soft via-white to-neutral-50" />
-                <div className="relative">
-                  <h3 className="text-lg font-semibold">Daily Challenge</h3>
-                  <p className="mt-2 text-sm text-neutral-700">Complete one quiz today for bonus XP and streak protection.</p>
-                  <button type="button" className="btn-primary mt-4 w-full" onClick={() => setActiveView(VIEWS.BROWSE)}>Start Challenge</button>
-                </div>
-              </article>
-            </div>
-            <article className="app-card">
-              <h3 className="text-lg font-semibold">Recent History</h3>
-              <div className="mt-4 space-y-2">
-                {attempts.length === 0 && <p className="text-sm text-neutral-500">No attempts yet.</p>}
-                {attempts.slice(0, 6).map((attempt) => (
-                  <div key={attempt._id || attempt.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <p className="text-sm font-medium">{attempt.quizTitle}</p>
-                      <div className="flex items-center gap-2">
-                        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${attempt.scorePercent >= 60 ? "bg-brand-soft text-brand-primary" : "bg-neutral-100 text-neutral-600"}`}>
-                          {attempt.scorePercent >= 60 ? "Pass" : "Needs Retry"}
-                        </span>
-                        <span className="text-sm font-medium text-brand-primary">{attempt.scorePercent}%</span>
+                </article>
+
+                <div className="space-y-3">
+                  {homePosts.map((post) => (
+                    <article key={post.id} className="app-card">
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-neutral-900">{post.author}</p>
+                          <p className="text-xs text-neutral-500">
+                            {post.role} • {post.timeLabel}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                    <p className="mt-1 text-xs text-neutral-500">{new Date(attempt.submittedAt).toLocaleString()}</p>
-                  </div>
-                ))}
+                      <p className="mt-3 text-sm leading-relaxed text-neutral-700">{post.content}</p>
+                      <div className="mt-4 flex items-center gap-4 border-t border-neutral-100 pt-3 text-xs text-neutral-500">
+                        <span>{post.likes + (likedPostIds[post.id] ? 1 : 0)} likes</span>
+                        <span>{post.comments + (postComments[post.id]?.length || 0)} comments</span>
+                      </div>
+                      <div className="mt-3 flex items-center gap-2">
+                        <button
+                          type="button"
+                          className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                            likedPostIds[post.id]
+                              ? "border-brand-border bg-brand-soft text-brand-primary"
+                              : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                          }`}
+                          onClick={() =>
+                            setLikedPostIds((prev) => ({
+                              ...prev,
+                              [post.id]: !prev[post.id],
+                            }))
+                          }
+                        >
+                          {likedPostIds[post.id] ? "Liked" : "Like"}
+                        </button>
+                      </div>
+                      <div className="mt-3 space-y-2">
+                        {(postComments[post.id] || []).map((entry) => (
+                          <div key={entry.id} className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+                            <p className="text-xs font-semibold text-neutral-800">{entry.author}</p>
+                            <p className="mt-1 text-sm text-neutral-700">{entry.content}</p>
+                          </div>
+                        ))}
+                        <div className="flex items-center gap-2">
+                          <input
+                            className="input-base h-10"
+                            placeholder="Write a comment..."
+                            value={commentDraftByPost[post.id] || ""}
+                            onChange={(e) =>
+                              setCommentDraftByPost((prev) => ({
+                                ...prev,
+                                [post.id]: e.target.value,
+                              }))
+                            }
+                          />
+                          <button
+                            type="button"
+                            className="btn-secondary h-10 px-4 py-0 disabled:opacity-50"
+                            disabled={!String(commentDraftByPost[post.id] || "").trim()}
+                            onClick={() => {
+                              const content = String(commentDraftByPost[post.id] || "").trim();
+                              if (!content) return;
+                              setPostComments((prev) => ({
+                                ...prev,
+                                [post.id]: [
+                                  ...(prev[post.id] || []),
+                                  {
+                                    id: `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+                                    author: formatDisplayName(user?.name || "You") || "You",
+                                    content,
+                                  },
+                                ],
+                              }));
+                              setCommentDraftByPost((prev) => ({ ...prev, [post.id]: "" }));
+                            }}
+                          >
+                            Comment
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  ))}
+                </div>
               </div>
-            </article>
+
+              <div className="space-y-4">
+                <article className="app-card">
+                  <h3 className="text-lg font-semibold">Quick Stats</h3>
+                  <div className="mt-3 space-y-2 text-sm">
+                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2">
+                      <span className="text-neutral-600">Quizzes Taken</span>
+                      <span className="font-semibold text-neutral-900">{dashboard.totalAttempts || 0}</span>
+                    </p>
+                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2">
+                      <span className="text-neutral-600">Average Score</span>
+                      <span className="font-semibold text-neutral-900">{dashboard.averageScore || 0}%</span>
+                    </p>
+                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2">
+                      <span className="text-neutral-600">Current Streak</span>
+                      <span className="font-semibold text-neutral-900">{streakDays} days</span>
+                    </p>
+                  </div>
+                </article>
+                <article className="app-card">
+                  <h3 className="text-lg font-semibold">Community Tips</h3>
+                  <ul className="mt-3 space-y-2 text-sm text-neutral-700">
+                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">Answer at least one forum question daily.</li>
+                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">Share one reviewer per week to help others.</li>
+                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">Join a study buddy group for accountability.</li>
+                  </ul>
+                </article>
+              </div>
+            </div>
           </section>
         )}
 
@@ -1801,7 +1907,7 @@ function App() {
             </article>
             <div className="flex flex-col gap-2 sm:flex-row">
               <button type="button" className="btn-primary w-full sm:w-auto" onClick={() => setActiveView(VIEWS.BROWSE)}>Take Similar Quiz</button>
-              <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setActiveView(VIEWS.DASHBOARD)}>Back to Dashboard</button>
+              <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setActiveView(VIEWS.DASHBOARD)}>Back to Home</button>
             </div>
           </section>
         )}
@@ -1930,7 +2036,7 @@ function App() {
                   <p className="mt-1 text-sm font-semibold text-violet-950">Quiz generator</p>
                   <p className="mt-1 text-xs text-violet-700/90">Switch to Gemini to auto-create questions from your topic.</p>
                 </div>
-                <div className="mt-2 grid gap-3 sm:grid-cols-3">
+                <div className="mt-2 grid gap-3 sm:grid-cols-3 sm:items-start">
                   <div className="sm:col-span-1">
                     <label className="label-base text-violet-900">Provider</label>
                     <div className="relative mt-1">
@@ -1980,17 +2086,21 @@ function App() {
                     >
                       <button
                         type="button"
-                        className="btn-base w-full bg-gradient-to-r from-violet-600 to-indigo-600 text-white hover:from-violet-700 hover:to-indigo-700"
-                        onClick={handleGenerateQuestions}
-                        disabled={createGeneratorLoading}
+                        className="btn-base w-full cursor-not-allowed bg-gradient-to-r from-violet-400 to-indigo-400 text-white opacity-75"
+                        aria-disabled="true"
+                        onClick={() =>
+                          setCreateMessage("AI generation is temporarily unavailable. The owner currently has no budget yet for this API.")
+                        }
                       >
-                        {createGeneratorLoading ? "Generating..." : "Generate with Gemini"}
+                        Generate with Gemini
                       </button>
                     </div>
                   </div>
                 </div>
                 <p className="mt-3 text-xs text-violet-700/90">
-                  Pick Gemini to auto-fill questions from title/category/description, then review before publishing.
+                  {createState.generatorProvider === "gemini"
+                    ? "This feature will be fully available soon. The owner currently has no budget yet for this API."
+                    : "Manual mode is active. Add your own questions below and publish when ready."}
                 </p>
               </div>
               <div className="space-y-3">
