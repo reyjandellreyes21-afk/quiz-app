@@ -29,6 +29,10 @@ const VIEWS = {
   USERS: "users",
 };
 
+/** Success toast: full visible time before fade; fade length (should match CSS transition) */
+const PUBLISH_TOAST_DURATION_MS = 7500;
+const PUBLISH_TOAST_FADE_MS = 350;
+
 const buildEmptyQuestion = () => ({
   text: "",
   kind: "mcq",
@@ -337,6 +341,146 @@ function ChevronRightIcon(props) {
   );
 }
 
+function LandingFooterIconMail(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+      <path d="M22 6l-10 7L2 6" />
+    </svg>
+  );
+}
+
+function LandingFooterIconPhone(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z" />
+    </svg>
+  );
+}
+
+function LandingFooterIconMapPin(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+      <circle cx="12" cy="10" r="3" />
+    </svg>
+  );
+}
+
+function LandingSiteFooter() {
+  const accent = "text-teal-400 shrink-0";
+  const aboutLinks = ["Blog", "Media", "Careers", "Our team", "Community", "Partnership"];
+  return (
+    <footer className="landing-site-footer w-full" role="contentinfo">
+      <svg className="block h-11 w-full shrink-0" viewBox="0 0 1440 48" preserveAspectRatio="none" aria-hidden>
+        <path fill="#2d3748" d="M0 48V16Q720 0 1440 16V48H0z" />
+      </svg>
+      <div className="-mt-px bg-[#2d3748] px-6 pb-8 pt-0 sm:px-8 lg:px-12">
+        <div className="app-container mx-auto grid max-w-7xl grid-cols-1 gap-12 pb-14 md:grid-cols-2 md:gap-10 lg:grid-cols-4 lg:gap-8 lg:pb-16">
+          <div className="text-left">
+            <h2 className="text-base font-bold tracking-tight text-white">Why Exam Forum</h2>
+            <p className="mt-4 text-sm leading-relaxed text-white/85">
+              We offer free practice and peer support for Filipino learners working toward licensure and career exams.
+            </p>
+            <p className="mt-3 text-sm leading-relaxed text-white/85">
+              Prepare with quizzes, forum discussions, and instant feedback—stay motivated, learn faster, and track your progress in one place.
+            </p>
+          </div>
+          <nav className="text-left" aria-label="About">
+            <h2 className="text-base font-bold tracking-tight text-white">About</h2>
+            <ul className="mt-4 flex flex-col gap-2.5">
+              {aboutLinks.map((label) => (
+                <li key={label}>
+                  <a href="#" className="landing-footer-about-link">
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </nav>
+          <div className="text-left">
+            <h2 className="text-base font-bold tracking-tight text-white">Contact</h2>
+            <ul className="mt-4 flex flex-col gap-4 text-sm">
+              <li className="flex gap-3">
+                <LandingFooterIconMail className={`${accent} mt-0.5`} />
+                <a href="mailto:support@examforum.ph">support@examforum.ph</a>
+              </li>
+              <li className="flex gap-3">
+                <LandingFooterIconPhone className={`${accent} mt-0.5`} />
+                <span className="text-white/90">
+                  +63 917 000 0000
+                  <br />
+                  +63 920 000 0000
+                </span>
+              </li>
+              <li className="flex gap-3">
+                <LandingFooterIconMapPin className={`${accent} mt-0.5 self-start`} />
+                <span className="text-white/90">
+                  Ayala Ave, Makati City
+                  <br />
+                  Metro Manila, Philippines
+                </span>
+              </li>
+            </ul>
+          </div>
+          <div className="text-left">
+            <h2 className="text-base font-bold tracking-tight text-white">Key stats</h2>
+            <dl className="mt-4 flex flex-col gap-6">
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-white/55">Forum posts</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-white">12k+</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-white/55">Mock quizzes</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-white">250+</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-medium uppercase tracking-wide text-white/55">Avg. pass rate</dt>
+                <dd className="mt-1 text-2xl font-semibold tabular-nums text-white">87%</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+        <div className="app-container mx-auto max-w-7xl border-t border-white/15 pt-10">
+          <div className="flex flex-col items-center gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex flex-col items-center gap-1 lg:items-start">
+              <QuizAppLogo className="h-9 w-auto max-w-[12rem] shrink-0 object-contain brightness-0 invert sm:h-10 sm:max-w-[13rem]" />
+              <p className="text-xs font-medium tracking-wide text-white/55">Path to pass</p>
+            </div>
+            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-white/85" aria-label="Legal">
+              <a href="#">Privacy Policy</a>
+              <a href="#">Copyright</a>
+              <a href="#">Terms of Service</a>
+            </nav>
+            <div className="flex items-center justify-center gap-2 sm:gap-3">
+              <a href="#" className="landing-footer-social" aria-label="Facebook">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                </svg>
+              </a>
+              <a href="#" className="landing-footer-social" aria-label="X / Twitter">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                </svg>
+              </a>
+              <a href="#" className="landing-footer-social" aria-label="Instagram">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                </svg>
+              </a>
+              <a href="#" className="landing-footer-social" aria-label="YouTube">
+                <svg className="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                  <path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
 function LandingFeatureIconDiscussion(props) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
@@ -448,7 +592,7 @@ function CategoryDropdown({ value, onChange, categories, placeholder = "Pick or 
       />
       <button
         type="button"
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700"
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center text-neutral-500 hover:text-neutral-700 dark:text-slate-400 dark:hover:text-slate-200"
         onClick={() => setOpen((prev) => !prev)}
         aria-label="Toggle category suggestions"
       >
@@ -540,6 +684,9 @@ function App() {
     questions: [buildEmptyQuestion()],
   });
   const [createMessage, setCreateMessage] = useState("");
+  const [publishFlash, setPublishFlash] = useState("");
+  const [publishFlashExiting, setPublishFlashExiting] = useState(false);
+  const publishFlashTimersRef = useRef({ fade: null, remove: null });
   const [createGeneratorLoading, setCreateGeneratorLoading] = useState(false);
   const [editState, setEditState] = useState({ quizId: "", title: "", category: "", description: "", questions: [] });
   const [editRemovedQuestionIds, setEditRemovedQuestionIds] = useState([]);
@@ -560,6 +707,31 @@ function App() {
     else document.documentElement.classList.remove("dark");
     localStorage.setItem("quiz_theme_v2", theme);
   }, [theme]);
+
+  useEffect(() => {
+    if (!publishFlash) return undefined;
+    setPublishFlashExiting(false);
+    const fadeAt = Math.max(0, PUBLISH_TOAST_DURATION_MS - PUBLISH_TOAST_FADE_MS);
+    publishFlashTimersRef.current.fade = window.setTimeout(() => setPublishFlashExiting(true), fadeAt);
+    publishFlashTimersRef.current.remove = window.setTimeout(() => {
+      setPublishFlash("");
+      setPublishFlashExiting(false);
+    }, PUBLISH_TOAST_DURATION_MS);
+    return () => {
+      window.clearTimeout(publishFlashTimersRef.current.fade);
+      window.clearTimeout(publishFlashTimersRef.current.remove);
+    };
+  }, [publishFlash]);
+
+  const dismissPublishFlash = useCallback(() => {
+    window.clearTimeout(publishFlashTimersRef.current.fade);
+    window.clearTimeout(publishFlashTimersRef.current.remove);
+    setPublishFlashExiting(true);
+    publishFlashTimersRef.current.remove = window.setTimeout(() => {
+      setPublishFlash("");
+      setPublishFlashExiting(false);
+    }, PUBLISH_TOAST_FADE_MS);
+  }, []);
 
   useEffect(() => {
     const ensureIconLink = (selector, rel) => {
@@ -1095,7 +1267,7 @@ function App() {
         },
       });
       setCreateState((prev) => ({ ...prev, title: normalizedTitle, category: normalizedCategory }));
-      setCreateMessage("Quiz published successfully.");
+      setPublishFlash("Quiz published successfully.");
       setCreateState({
         title: "",
         category: "",
@@ -1264,15 +1436,15 @@ function App() {
                 <div className="flex w-full max-w-md flex-wrap justify-center gap-x-10 gap-y-8 border-t border-neutral-200/80 pt-9 dark:border-slate-700/80 sm:max-w-lg sm:gap-x-12 lg:max-w-none lg:justify-start">
                   <div className="min-w-[5.5rem] text-center lg:text-left">
                     <span className="block text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">12k+</span>
-                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-500">Forum posts</span>
+                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-400">Forum posts</span>
                   </div>
                   <div className="min-w-[5.5rem] text-center lg:text-left">
                     <span className="block text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">250+</span>
-                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-500">Mock quizzes</span>
+                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-400">Mock quizzes</span>
                   </div>
                   <div className="min-w-[5.5rem] text-center lg:text-left">
                     <span className="block text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">24/7</span>
-                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-500">Peer support</span>
+                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-400">Peer support</span>
                   </div>
                 </div>
               </div>
@@ -1390,6 +1562,8 @@ function App() {
             </div>
           </section>
           </div>
+
+          <LandingSiteFooter />
         </main>
 
         {authPanelVisible && (
@@ -1424,7 +1598,7 @@ function App() {
                 <form onSubmit={handleAuth} className="space-y-5">
                 {authMode === "signup" && (
                   <div>
-                    <label htmlFor="auth-name" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                    <label htmlFor="auth-name" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
                       Full name
                     </label>
                     <input
@@ -1440,7 +1614,7 @@ function App() {
                   </div>
                 )}
                 <div>
-                  <label htmlFor="auth-email" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                  <label htmlFor="auth-email" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
                     Email
                   </label>
                   <input
@@ -1456,7 +1630,7 @@ function App() {
                   />
                 </div>
                 <div>
-                  <label htmlFor="auth-password" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                  <label htmlFor="auth-password" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
                     Password
                   </label>
                   <div className="relative">
@@ -1474,7 +1648,7 @@ function App() {
                     />
                     <button
                       type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                       onClick={() => setShowAuthPassword((prev) => !prev)}
                       aria-label={showAuthPassword ? "Hide password" : "Show password"}
                       aria-pressed={showAuthPassword}
@@ -1486,7 +1660,7 @@ function App() {
                 </div>
                 {authMode === "signup" && (
                   <div>
-                    <label htmlFor="auth-confirm-password" className="mb-1.5 block text-sm font-medium text-neutral-700">
+                    <label htmlFor="auth-confirm-password" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
                       Confirm password
                     </label>
                     <div className="relative">
@@ -1504,7 +1678,7 @@ function App() {
                       />
                       <button
                         type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
                         onClick={() => setShowConfirmPassword((prev) => !prev)}
                         aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
                         aria-pressed={showConfirmPassword}
@@ -1516,7 +1690,7 @@ function App() {
                   </div>
                 )}
                 {message && (
-                  <p className="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800" role="alert">
+                  <p className="app-alert-error" role="alert">
                     {message}
                   </p>
                 )}
@@ -1532,9 +1706,9 @@ function App() {
                 </form>
 
                 <div className="my-6 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-neutral-200" />
-                  <span className="text-xs font-medium uppercase tracking-wide text-neutral-600">or</span>
-                  <span className="h-px flex-1 bg-neutral-200" />
+                  <span className="h-px flex-1 bg-neutral-200 dark:bg-slate-600" />
+                  <span className="text-xs font-medium uppercase tracking-wide text-neutral-600 dark:text-slate-400">or</span>
+                  <span className="h-px flex-1 bg-neutral-200 dark:bg-slate-600" />
                 </div>
 
                 <div className="flex flex-col items-center gap-3">
@@ -1544,9 +1718,9 @@ function App() {
                       ref={googleBtnRef}
                     />
                   ) : (
-                    <p className="text-center text-xs text-neutral-500">
+                    <p className="text-center text-xs text-neutral-500 dark:text-slate-400">
                       Add{" "}
-                      <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] text-neutral-700">VITE_GOOGLE_CLIENT_ID</code>{" "}
+                      <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] text-neutral-700 dark:bg-slate-800 dark:text-slate-200">VITE_GOOGLE_CLIENT_ID</code>{" "}
                       for Google sign-in.
                     </p>
                   )}
@@ -1598,6 +1772,41 @@ function App() {
 
   return (
     <div className="min-h-screen bg-app dark:bg-slate-950">
+      {publishFlash ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className={`fixed left-1/2 top-[4.75rem] z-[60] w-[min(100vw-2rem,26rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-emerald-200/80 bg-white/95 shadow-[0_22px_50px_-14px_rgba(5,150,105,0.35),0_8px_16px_-8px_rgba(15,23,42,0.12)] backdrop-blur-xl ring-1 ring-emerald-500/[0.08] transition-[opacity,transform] duration-[350ms] ease-out dark:border-emerald-500/25 dark:bg-slate-900/95 dark:shadow-[0_22px_50px_-14px_rgba(0,0,0,0.55),0_0_0_1px_rgba(16,185,129,0.12)] dark:ring-emerald-400/10 ${publishFlashExiting ? "pointer-events-none translate-y-[-6px] opacity-0" : "translate-y-0 opacity-100"}`}
+        >
+          <div className="relative flex items-start gap-3 px-4 pb-3 pt-4 sm:gap-3.5 sm:px-5 sm:pb-3.5 sm:pt-4">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white shadow-lg shadow-emerald-600/30 ring-2 ring-white/25 dark:ring-emerald-400/20">
+              <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1 pt-0.5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-emerald-600 dark:text-emerald-400">Published</p>
+              <p className="mt-1 text-[15px] font-medium leading-snug tracking-tight text-neutral-800 dark:text-slate-100">{publishFlash}</p>
+            </div>
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-transparent text-neutral-400 transition hover:border-neutral-200 hover:bg-neutral-100 hover:text-neutral-700 dark:text-slate-500 dark:hover:border-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200"
+              aria-label="Dismiss notification"
+              onClick={dismissPublishFlash}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden>
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          <div className="relative h-1 overflow-hidden bg-emerald-100/90 dark:bg-emerald-950/80">
+            <div
+              className="publish-toast-progress h-full w-full rounded-none bg-gradient-to-r from-emerald-500 to-teal-500 dark:from-emerald-400 dark:to-teal-400"
+              style={{ animationDuration: `${PUBLISH_TOAST_DURATION_MS}ms` }}
+            />
+          </div>
+        </div>
+      ) : null}
       <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-900/95">
         <div className="app-container flex h-[4.25rem] items-center justify-between gap-3">
           <button
@@ -1669,7 +1878,7 @@ function App() {
                         className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition ${
                           theme === "light"
                             ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
-                            : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                            : "text-neutral-500 hover:text-neutral-800 dark:text-slate-400 dark:hover:text-slate-200"
                         }`}
                         onClick={() => setTheme("light")}
                       >
@@ -1683,7 +1892,7 @@ function App() {
                         className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition ${
                           theme === "dark"
                             ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
-                            : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                            : "text-neutral-500 hover:text-neutral-800 dark:text-slate-400 dark:hover:text-slate-200"
                         }`}
                         onClick={() => setTheme("dark")}
                       >
@@ -1728,7 +1937,7 @@ function App() {
                       className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2.5 text-xs font-semibold transition ${
                         theme === "light"
                           ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
-                          : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                          : "text-neutral-500 hover:text-neutral-800 dark:text-slate-400 dark:hover:text-slate-200"
                       }`}
                       onClick={() => setTheme("light")}
                     >
@@ -1742,7 +1951,7 @@ function App() {
                       className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2.5 text-xs font-semibold transition ${
                         theme === "dark"
                           ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
-                          : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                          : "text-neutral-500 hover:text-neutral-800 dark:text-slate-400 dark:hover:text-slate-200"
                       }`}
                       onClick={() => setTheme("dark")}
                     >
@@ -1784,7 +1993,7 @@ function App() {
         {activeView === VIEWS.DASHBOARD && (
           <section className="space-y-4 md:space-y-6">
             {dashboardLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading home feed...</p>}
-            {dashboardError && <p className="text-sm text-rose-700">{dashboardError}</p>}
+            {dashboardError && <p className="app-alert-danger-text text-sm">{dashboardError}</p>}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <div className="space-y-4 lg:col-span-2">
                 <article className="app-card">
@@ -1829,13 +2038,13 @@ function App() {
                     <article key={post.id} className="app-card">
                       <div className="flex items-start justify-between gap-3">
                         <div>
-                          <p className="text-sm font-semibold text-neutral-900">{post.author}</p>
-                          <p className="text-xs text-neutral-500">
+                          <p className="text-sm font-semibold text-neutral-900 dark:text-slate-100">{post.author}</p>
+                          <p className="text-xs text-neutral-500 dark:text-slate-400">
                             {post.role} • {post.timeLabel}
                           </p>
                         </div>
                       </div>
-                      <p className="mt-3 text-sm leading-relaxed text-neutral-700">{post.content}</p>
+                      <p className="mt-3 text-sm leading-relaxed text-neutral-700 dark:text-slate-300">{post.content}</p>
                       <div className="mt-4 flex items-center gap-4 border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-slate-700 dark:text-slate-400">
                         <span>{post.likes + (likedPostIds[post.id] ? 1 : 0)} likes</span>
                         <span>{post.comments + (postComments[post.id]?.length || 0)} comments</span>
@@ -1846,7 +2055,7 @@ function App() {
                           className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
                             likedPostIds[post.id]
                               ? "border-brand-border bg-brand-soft text-brand-primary"
-                              : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50"
+                              : "border-neutral-200 bg-white text-neutral-700 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
                           }`}
                           onClick={() =>
                             setLikedPostIds((prev) => ({
@@ -1861,8 +2070,8 @@ function App() {
                       <div className="mt-3 space-y-2">
                         {(postComments[post.id] || []).map((entry) => (
                           <div key={entry.id} className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">
-                            <p className="text-xs font-semibold text-neutral-800">{entry.author}</p>
-                            <p className="mt-1 text-sm text-neutral-700">{entry.content}</p>
+                            <p className="text-xs font-semibold text-neutral-800 dark:text-slate-200">{entry.author}</p>
+                            <p className="mt-1 text-sm text-neutral-700 dark:text-slate-300">{entry.content}</p>
                           </div>
                         ))}
                         <div className="flex items-center gap-2">
@@ -1909,25 +2118,25 @@ function App() {
 
               <div className="space-y-4">
                 <article className="app-card">
-                  <h3 className="text-lg font-semibold">Quick Stats</h3>
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Quick Stats</h3>
                   <div className="mt-3 space-y-2 text-sm">
-                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2">
-                      <span className="text-neutral-600">Quizzes Taken</span>
-                      <span className="font-semibold text-neutral-900">{dashboard.totalAttempts || 0}</span>
+                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 dark:bg-slate-800/70">
+                      <span className="text-neutral-600 dark:text-slate-400">Quizzes Taken</span>
+                      <span className="font-semibold text-neutral-900 dark:text-slate-100">{dashboard.totalAttempts || 0}</span>
                     </p>
-                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2">
-                      <span className="text-neutral-600">Average Score</span>
-                      <span className="font-semibold text-neutral-900">{dashboard.averageScore || 0}%</span>
+                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 dark:bg-slate-800/70">
+                      <span className="text-neutral-600 dark:text-slate-400">Average Score</span>
+                      <span className="font-semibold text-neutral-900 dark:text-slate-100">{dashboard.averageScore || 0}%</span>
                     </p>
-                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2">
-                      <span className="text-neutral-600">Current Streak</span>
-                      <span className="font-semibold text-neutral-900">{streakDays} days</span>
+                    <p className="flex items-center justify-between rounded-lg bg-neutral-50 px-3 py-2 dark:bg-slate-800/70">
+                      <span className="text-neutral-600 dark:text-slate-400">Current Streak</span>
+                      <span className="font-semibold text-neutral-900 dark:text-slate-100">{streakDays} days</span>
                     </p>
                   </div>
                 </article>
                 <article className="app-card">
-                  <h3 className="text-lg font-semibold">Community Tips</h3>
-                  <ul className="mt-3 space-y-2 text-sm text-neutral-700">
+                  <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">Community Tips</h3>
+                  <ul className="mt-3 space-y-2 text-sm text-neutral-700 dark:text-slate-300">
                     <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">Answer at least one forum question daily.</li>
                     <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">Share one reviewer per week to help others.</li>
                     <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">Join a study buddy group for accountability.</li>
@@ -1941,11 +2150,11 @@ function App() {
         {activeView === VIEWS.BROWSE && (
           <section className="space-y-4 md:space-y-6">
             {browseLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading quizzes...</p>}
-            {browseError && <p className="text-sm text-rose-700">{browseError}</p>}
+            {browseError && <p className="app-alert-danger-text text-sm">{browseError}</p>}
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => setSelectedCategory("")} className={`rounded-full px-3 py-1 text-xs font-medium ${selectedCategory === "" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "bg-neutral-100 text-neutral-700"}`}>All</button>
+              <button type="button" onClick={() => setSelectedCategory("")} className={`rounded-full px-3 py-1 text-xs font-medium ${selectedCategory === "" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "bg-neutral-100 text-neutral-700 dark:bg-slate-800 dark:text-slate-200"}`}>All</button>
               {categories.map((category) => (
-                <button key={category} type="button" onClick={() => setSelectedCategory(category)} className={`rounded-full px-3 py-1 text-xs font-medium ${selectedCategory === category ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "bg-neutral-100 text-neutral-700"}`}>
+                <button key={category} type="button" onClick={() => setSelectedCategory(category)} className={`rounded-full px-3 py-1 text-xs font-medium ${selectedCategory === category ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "bg-neutral-100 text-neutral-700 dark:bg-slate-800 dark:text-slate-200"}`}>
                   {category}
                 </button>
               ))}
@@ -1959,17 +2168,17 @@ function App() {
                   <article key={qid} className="app-card-interactive group flex h-full flex-col">
                     <div className="min-h-0 flex-1">
                       <span className="inline-flex rounded-full border border-brand-border bg-brand-soft px-3 py-1 text-xs font-medium text-brand-primary">{quiz.category}</span>
-                      <h3 className="mt-2 text-lg font-semibold">{quiz.title}</h3>
+                      <h3 className="mt-2 text-lg font-semibold text-neutral-900 dark:text-slate-100">{quiz.title}</h3>
                       <p className="mt-2 line-clamp-2 text-sm text-neutral-600 dark:text-slate-400">{quiz.description || "Challenge yourself with this quiz."}</p>
                       <p className="mt-3 text-sm text-neutral-600 dark:text-slate-400">{quiz.questionCount} questions • {Math.max(1, Math.round(quiz.questionCount / 2))} min</p>
                     </div>
                     <div className="mt-auto flex shrink-0 flex-col gap-2 border-t border-neutral-100 pt-4 dark:border-slate-700">
                       <button type="button" onClick={() => { setSelectedQuiz(quiz); setActiveView(VIEWS.QUIZ_INTRO); }} className="btn-primary w-full">View Quiz</button>
                       {own && (
-                        <>
+                        <div className="grid grid-cols-2 gap-2">
                           <button
                             type="button"
-                            className="btn-secondary w-full disabled:opacity-60"
+                            className="btn-secondary w-full min-w-0 disabled:opacity-60"
                             disabled={editLoading}
                             onClick={() => openEditQuiz(quiz)}
                           >
@@ -1977,13 +2186,13 @@ function App() {
                           </button>
                           <button
                             type="button"
-                            className="btn-danger w-full disabled:opacity-60"
+                            className="btn-danger w-full min-w-0 disabled:opacity-60"
                             disabled={deleting}
                             onClick={() => handleDeleteQuiz(quiz)}
                           >
                             {deleting ? "Deleting…" : "Delete quiz"}
                           </button>
-                        </>
+                        </div>
                       )}
                     </div>
                   </article>
@@ -1992,7 +2201,7 @@ function App() {
             </div>
             {!browseLoading && quizzes.length === 0 && (
               <article className="app-card">
-                <h3 className="text-lg font-semibold">No playable quizzes yet</h3>
+                <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">No playable quizzes yet</h3>
                 <p className="mt-2 text-sm text-neutral-600 dark:text-slate-400">Create a quiz and add at least one question to make it appear here.</p>
                 <button type="button" className="btn-primary mt-4" onClick={() => setActiveView(VIEWS.CREATE)}>Go to Create</button>
               </article>
@@ -2004,7 +2213,7 @@ function App() {
           <section className="app-card space-y-4 md:space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h2 className="text-2xl font-semibold">Edit Quiz</h2>
+                <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Edit Quiz</h2>
                 <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">Update quiz info and manage questions.</p>
               </div>
               <button type="button" className="btn-secondary" onClick={() => setActiveView(VIEWS.BROWSE)}>Back to Browse</button>
@@ -2030,18 +2239,18 @@ function App() {
                 {editState.questions.map((question, qIndex) => {
                   const qKind = normalizeQuestionKind(question.kind);
                   return (
-                    <div key={`edit-q-${getQuestionId(question) || qIndex}`} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                    <div key={`edit-q-${getQuestionId(question) || qIndex}`} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-slate-600 dark:bg-slate-800/50">
                       <div className="mb-2 flex items-center justify-between">
-                        <p className="text-sm font-semibold">Question {qIndex + 1}</p>
-                        <button type="button" className="text-xs text-rose-600" onClick={() => removeEditQuestion(qIndex)}>Remove</button>
+                        <p className="text-sm font-semibold text-neutral-900 dark:text-slate-100">Question {qIndex + 1}</p>
+                        <button type="button" className="text-xs text-rose-600 dark:text-rose-400" onClick={() => removeEditQuestion(qIndex)}>Remove</button>
                       </div>
                       <input className="input-base mb-2" placeholder="Question text" value={question.text} onChange={(e) => updateEditQuestionField(qIndex, "text", e.target.value)} required />
                       <div className="mb-3">
                         <p className="label-base mb-2">Answer type</p>
                         <div className="flex flex-wrap gap-2">
-                          <button type="button" onClick={() => setEditQuestionKind(qIndex, "mcq")} className={`rounded-xl px-3 py-2 text-sm ${qKind === "mcq" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"}`}>Multiple choice</button>
-                          <button type="button" onClick={() => setEditQuestionKind(qIndex, "tf")} className={`rounded-xl px-3 py-2 text-sm ${qKind === "tf" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"}`}>True / false</button>
-                          <button type="button" onClick={() => setEditQuestionKind(qIndex, "fill")} className={`rounded-xl px-3 py-2 text-sm ${qKind === "fill" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"}`}>Fill in the blank</button>
+                          <button type="button" onClick={() => setEditQuestionKind(qIndex, "mcq")} className={`rounded-xl px-3 py-2 text-sm ${qKind === "mcq" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}>Multiple choice</button>
+                          <button type="button" onClick={() => setEditQuestionKind(qIndex, "tf")} className={`rounded-xl px-3 py-2 text-sm ${qKind === "tf" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}>True / false</button>
+                          <button type="button" onClick={() => setEditQuestionKind(qIndex, "fill")} className={`rounded-xl px-3 py-2 text-sm ${qKind === "fill" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}>Fill in the blank</button>
                         </div>
                       </div>
                       {qKind === "fill" ? (
@@ -2075,7 +2284,7 @@ function App() {
               </div>
               <button type="button" className="btn-secondary w-full sm:w-auto" onClick={addEditQuestion}>Add Question</button>
               {editMessage && (
-                <p className={`text-sm font-medium ${editMessage.includes("success") ? "text-emerald-700" : "text-rose-700"}`}>
+                <p className={`text-sm font-medium ${editMessage.includes("success") ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
                   {editMessage}
                 </p>
               )}
@@ -2086,17 +2295,17 @@ function App() {
 
         {activeView === VIEWS.QUIZ_INTRO && selectedQuiz && (
           <section className="app-card relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-brand-soft via-white to-neutral-50" />
+            <div className="absolute inset-0 bg-gradient-to-br from-brand-soft via-white to-neutral-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-950" />
             <div className="relative space-y-4">
-              <h2 className="text-2xl font-semibold">{selectedQuiz.title}</h2>
-              <p className="text-sm text-neutral-700">{selectedQuiz.description || "No description provided."}</p>
+              <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">{selectedQuiz.title}</h2>
+              <p className="text-sm text-neutral-700 dark:text-slate-300">{selectedQuiz.description || "No description provided."}</p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm">Category: {selectedQuiz.category}</div>
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm">Questions: {selectedQuiz.questionCount}</div>
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3 text-sm">Estimated: {selectedQuiz.questionCount * 30}s</div>
+                <div className="app-surface-muted p-3 text-sm">Category: {selectedQuiz.category}</div>
+                <div className="app-surface-muted p-3 text-sm">Questions: {selectedQuiz.questionCount}</div>
+                <div className="app-surface-muted p-3 text-sm">Estimated: {selectedQuiz.questionCount * 30}s</div>
               </div>
-              {quizMessage && <p className="text-sm text-rose-700">{quizMessage}</p>}
-              <label className="flex items-center gap-2 text-sm text-neutral-700">
+              {quizMessage && <p className="app-alert-danger-text text-sm">{quizMessage}</p>}
+              <label className="flex items-center gap-2 text-sm text-neutral-700 dark:text-slate-300">
                 <input type="checkbox" checked={timedMode} onChange={(e) => setTimedMode(e.target.checked)} />
                 Timed mode
               </label>
@@ -2114,20 +2323,20 @@ function App() {
           <section className="mx-auto max-w-3xl space-y-4">
             <div className="app-card">
               <div className="mb-3 flex items-center justify-between text-sm">
-                <p className="text-neutral-600">{activeQuiz.title}</p>
+                <p className="text-neutral-600 dark:text-slate-400">{activeQuiz.title}</p>
                 <p className="font-medium text-brand-primary">{timedMode ? formatTime(secondsLeft) : "Practice Mode"}</p>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-neutral-200/90">
+              <div className="h-2 overflow-hidden rounded-full bg-neutral-200/90 dark:bg-slate-700">
                 <div
                   className="h-2 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-300 ease-out"
                   style={{ width: `${progress}%` }}
                 />
               </div>
-              <p className="mt-2 text-xs uppercase tracking-wide text-neutral-500">Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}</p>
+              <p className="mt-2 text-xs uppercase tracking-wide text-neutral-500 dark:text-slate-400">Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}</p>
             </div>
 
             <div className="app-card">
-              <h3 className="text-lg font-semibold">{currentQuestion.text}</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{currentQuestion.text}</h3>
               {(() => {
                 const cqKey = getQuestionKey(currentQuestion, currentQuestionIndex);
                 const fillVal = answers[cqKey];
@@ -2153,7 +2362,7 @@ function App() {
                         key={`${cqKey}-${optionIndex}`}
                         type="button"
                         onClick={() => setAnswers((prev) => ({ ...prev, [cqKey]: optionIndex }))}
-                        className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${answers[cqKey] === optionIndex ? "border-brand-primary bg-brand-soft text-brand-primary" : "border-neutral-200 bg-white text-neutral-800 hover:border-brand-border"}`}
+                        className={`w-full rounded-xl border px-4 py-3 text-left text-sm transition ${answers[cqKey] === optionIndex ? "border-brand-primary bg-brand-soft text-brand-primary" : "border-neutral-200 bg-white text-neutral-800 hover:border-brand-border dark:border-slate-600 dark:bg-slate-950 dark:text-slate-100 dark:hover:border-brand-border/80"}`}
                       >
                         {option}
                       </button>
@@ -2174,7 +2383,7 @@ function App() {
                   </button>
                 )}
               </div>
-              {submitError && <p className="mt-2 text-sm text-rose-700">{submitError}</p>}
+              {submitError && <p className="app-alert-danger-text mt-2 text-sm">{submitError}</p>}
             </div>
           </section>
         )}
@@ -2182,7 +2391,7 @@ function App() {
         {activeView === VIEWS.QUIZ && activeQuiz && !currentQuestion && (
           <section className="mx-auto max-w-3xl">
             <article className="app-card">
-              <h3 className="text-lg font-semibold">No questions available</h3>
+              <h3 className="text-lg font-semibold text-neutral-900 dark:text-slate-100">No questions available</h3>
               <p className="mt-2 text-sm text-neutral-600 dark:text-slate-400">This quiz cannot be played because it has no questions.</p>
               <button type="button" className="btn-primary mt-4" onClick={() => setActiveView(VIEWS.BROWSE)}>Back to Browse</button>
             </article>
@@ -2193,19 +2402,19 @@ function App() {
           <section className="mx-auto max-w-3xl space-y-4">
             <article className="app-card ring-1 ring-brand-border">
               <p className="meta-label">Result</p>
-              <h2 className="mt-1 text-2xl font-semibold">{result.scorePercent}%</h2>
-              <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${result.scorePercent >= 80 ? "bg-brand-muted text-brand-primary" : result.scorePercent >= 60 ? "bg-brand-soft text-brand-primary" : "bg-neutral-100 text-neutral-600"}`}>
+              <h2 className="mt-1 text-2xl font-semibold text-neutral-900 dark:text-slate-100">{result.scorePercent}%</h2>
+              <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${result.scorePercent >= 80 ? "bg-brand-muted text-brand-primary" : result.scorePercent >= 60 ? "bg-brand-soft text-brand-primary" : "bg-neutral-100 text-neutral-600 dark:bg-slate-800 dark:text-slate-300"}`}>
                 {result.scorePercent >= 80 ? "Excellent" : result.scorePercent >= 60 ? "Good" : "Try Again"}
               </span>
               <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">Correct: {result.correctCount}</div>
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">Wrong: {result.totalQuestions - result.correctCount}</div>
-                <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">Total: {result.totalQuestions}</div>
+                <div className="app-surface-muted p-3">Correct: {result.correctCount}</div>
+                <div className="app-surface-muted p-3">Wrong: {result.totalQuestions - result.correctCount}</div>
+                <div className="app-surface-muted p-3">Total: {result.totalQuestions}</div>
               </div>
             </article>
             <article className="app-card space-y-2">
               {result.breakdown.map((entry, idx) => (
-                <div key={entry.questionId} className={`rounded-xl border p-3 text-sm ${entry.isCorrect ? "border-brand-border bg-brand-soft text-brand-primary" : "border-neutral-200 bg-neutral-50 text-neutral-800"}`}>
+                <div key={entry.questionId} className={`rounded-xl border p-3 text-sm ${entry.isCorrect ? "border-brand-border bg-brand-soft text-brand-primary" : "border-neutral-200 bg-neutral-50 text-neutral-800 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-200"}`}>
                   Q{idx + 1}: {entry.isCorrect ? "Correct" : `Wrong (answer: ${entry.correctAnswer})`}
                 </div>
               ))}
@@ -2220,7 +2429,7 @@ function App() {
         {activeView === VIEWS.HISTORY && (
           <section className="app-card space-y-4 md:space-y-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="text-2xl font-semibold">Quiz History</h2>
+              <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Quiz History</h2>
               <button
                 type="button"
                 className="btn-danger shrink-0 disabled:opacity-50"
@@ -2231,21 +2440,21 @@ function App() {
               </button>
             </div>
             {historyLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading history...</p>}
-            {historyError && <p className="text-sm text-rose-700">{historyError}</p>}
+            {historyError && <p className="app-alert-danger-text text-sm">{historyError}</p>}
             <div className="space-y-2">
-              {attempts.length === 0 && <p className="text-sm text-neutral-500">No attempts yet.</p>}
+              {attempts.length === 0 && <p className="text-sm text-neutral-500 dark:text-slate-400">No attempts yet.</p>}
               {attempts.map((attempt) => (
-                <article key={attempt._id || attempt.id} className="rounded-xl border border-neutral-200 bg-neutral-50 p-3">
+                <article key={attempt._id || attempt.id} className="app-history-row">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="text-sm font-medium">{attempt.quizTitle}</p>
+                    <p className="text-sm font-medium text-neutral-900 dark:text-slate-100">{attempt.quizTitle}</p>
                     <div className="flex items-center gap-2">
-                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${attempt.scorePercent >= 60 ? "bg-brand-soft text-brand-primary" : "bg-neutral-100 text-neutral-600"}`}>
+                      <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${attempt.scorePercent >= 60 ? "bg-brand-soft text-brand-primary" : "bg-neutral-100 text-neutral-600 dark:bg-slate-800 dark:text-slate-300"}`}>
                         {attempt.scorePercent >= 60 ? "Pass" : "Needs Retry"}
                       </span>
                       <span className="text-sm font-medium text-brand-primary">{attempt.scorePercent}%</span>
                     </div>
                   </div>
-                  <p className="mt-1 text-xs text-neutral-500">{new Date(attempt.submittedAt).toLocaleString()}</p>
+                  <p className="mt-1 text-xs text-neutral-500 dark:text-slate-400">{new Date(attempt.submittedAt).toLocaleString()}</p>
                 </article>
               ))}
             </div>
@@ -2254,7 +2463,7 @@ function App() {
 
         {activeView === VIEWS.PROFILE && (
           <section className="app-card space-y-4 md:space-y-6">
-            <h2 className="text-2xl font-semibold">Profile</h2>
+            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Profile</h2>
             {user ? (
               <div className="space-y-4">
                 <div className="flex flex-wrap items-center gap-4">
@@ -2262,14 +2471,14 @@ function App() {
                     {(formatDisplayName(user.name) || "?").charAt(0)}
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-neutral-900">{formatDisplayName(user.name)}</p>
+                    <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{formatDisplayName(user.name)}</p>
                     <p className="text-sm text-neutral-600 dark:text-slate-400">{user.email}</p>
                   </div>
                 </div>
-                <p className="text-xs text-neutral-500">Details refresh from the server when you open this page.</p>
+                <p className="text-xs text-neutral-500 dark:text-slate-400">Details refresh from the server when you open this page.</p>
               </div>
             ) : (
-              <p className="text-sm text-rose-700">Could not load your profile. Try signing in again.</p>
+              <p className="app-alert-danger-text text-sm">Could not load your profile. Try signing in again.</p>
             )}
           </section>
         )}
@@ -2277,19 +2486,19 @@ function App() {
         {activeView === VIEWS.USERS && (
           <section className="app-card space-y-4 md:space-y-6">
             <div>
-              <h2 className="text-2xl font-semibold">Users</h2>
+              <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Users</h2>
               <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">People registered on this app (names only).</p>
             </div>
             {usersLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading users...</p>}
-            {usersError && <p className="text-sm text-rose-700">{usersError}</p>}
+            {usersError && <p className="app-alert-danger-text text-sm">{usersError}</p>}
             {!usersLoading && !usersError && (
-              <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200">
-                {usersList.length === 0 && <li className="px-4 py-6 text-sm text-neutral-500">No users yet.</li>}
+              <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200 dark:divide-slate-700 dark:border-slate-600">
+                {usersList.length === 0 && <li className="px-4 py-6 text-sm text-neutral-500 dark:text-slate-400">No users yet.</li>}
                 {usersList.map((u) => (
                   <li key={u.id} className="flex flex-wrap items-center justify-between gap-2 px-4 py-3">
-                    <span className="font-medium text-neutral-900">{formatDisplayName(u.name)}</span>
+                    <span className="font-medium text-neutral-900 dark:text-slate-100">{formatDisplayName(u.name)}</span>
                     {u.joinedAt && (
-                      <span className="text-xs text-neutral-500">{new Date(u.joinedAt).toLocaleDateString()}</span>
+                      <span className="text-xs text-neutral-500 dark:text-slate-400">{new Date(u.joinedAt).toLocaleDateString()}</span>
                     )}
                   </li>
                 ))}
@@ -2301,7 +2510,7 @@ function App() {
         {activeView === VIEWS.CREATE && (
           <section className="app-card space-y-4 md:space-y-6">
             <div>
-              <h2 className="text-2xl font-semibold">Create Quiz</h2>
+              <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Create Quiz</h2>
               <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">Create and publish a quiz with multiple-choice, true/false, or fill-in-the-blank questions.</p>
             </div>
             <form onSubmit={handleCreateQuiz} className="space-y-4">
@@ -2333,27 +2542,27 @@ function App() {
                   onChange={(e) => setCreateState((prev) => ({ ...prev, description: e.target.value }))}
                 />
               </div>
-              <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-indigo-50 to-fuchsia-50 p-4 shadow-sm">
-                <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-violet-300/25 blur-2xl" />
-                <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-fuchsia-300/20 blur-2xl" />
+              <div className="relative overflow-hidden rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 via-indigo-50 to-fuchsia-50 p-4 shadow-sm dark:border-violet-800/60 dark:from-slate-900 dark:via-indigo-950 dark:to-violet-950">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full bg-violet-300/25 blur-2xl dark:bg-violet-500/15" />
+                <div className="pointer-events-none absolute -bottom-10 -left-10 h-28 w-28 rounded-full bg-fuchsia-300/20 blur-2xl dark:bg-fuchsia-500/10" />
                 <div className="relative">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700">AI Assistant</p>
-                  <p className="mt-1 text-sm font-semibold text-violet-950">Quiz generator</p>
-                  <p className="mt-1 text-xs text-violet-700/90">Switch to Gemini to auto-create questions from your topic.</p>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">AI Assistant</p>
+                  <p className="mt-1 text-sm font-semibold text-violet-950 dark:text-slate-100">Quiz generator</p>
+                  <p className="mt-1 text-xs text-violet-700/90 dark:text-violet-200/90">Switch to Gemini to auto-create questions from your topic.</p>
                 </div>
                 <div className="mt-2 grid gap-3 sm:grid-cols-3 sm:items-start">
                   <div className="sm:col-span-1">
-                    <label className="label-base text-violet-900">Provider</label>
+                    <label className="label-base text-violet-900 dark:text-violet-200">Provider</label>
                     <div className="relative mt-1">
                       <select
-                        className="input-base appearance-none border-violet-200 bg-white/90 pr-10 focus:border-violet-500 focus:ring-violet-500/25"
+                        className="input-base appearance-none border-violet-200 bg-white/90 pr-10 focus:border-violet-500 focus:ring-violet-500/25 dark:border-violet-700 dark:bg-slate-900/90 dark:focus:border-violet-400 dark:focus:ring-violet-400/25"
                         value={createState.generatorProvider}
                         onChange={(e) => setCreateState((prev) => ({ ...prev, generatorProvider: e.target.value }))}
                       >
                         <option value="manual">Manual</option>
                         <option value="gemini">Gemini</option>
                       </select>
-                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-600" />
+                      <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-violet-600 dark:text-violet-400" />
                     </div>
                   </div>
                   <div
@@ -2369,12 +2578,12 @@ function App() {
                         createState.generatorProvider === "gemini" ? "max-h-40 translate-y-0" : "max-h-0 -translate-y-1"
                       }`}
                     >
-                      <label className="label-base text-violet-900">Question count</label>
+                      <label className="label-base text-violet-900 dark:text-violet-200">Question count</label>
                       <input
                         type="number"
                         min={1}
                         max={20}
-                        className="input-base mt-1 border-violet-200 bg-white/90 focus:border-violet-500 focus:ring-violet-500/25"
+                        className="input-base mt-1 border-violet-200 bg-white/90 focus:border-violet-500 focus:ring-violet-500/25 dark:border-violet-700 dark:bg-slate-900/90 dark:focus:border-violet-400 dark:focus:ring-violet-400/25"
                         value={createState.generatorQuestionCount}
                         onChange={(e) =>
                           setCreateState((prev) => ({
@@ -2402,7 +2611,7 @@ function App() {
                     </div>
                   </div>
                 </div>
-                <p className="mt-3 text-xs text-violet-700/90">
+                <p className="mt-3 text-xs text-violet-700/90 dark:text-violet-200/85">
                   {createState.generatorProvider === "gemini"
                     ? "This feature will be fully available soon. The owner currently has no budget yet for this API."
                     : "Manual mode is active. Add your own questions below and publish when ready."}
@@ -2412,9 +2621,9 @@ function App() {
                 {createState.questions.map((question, qIndex) => {
                   const qKind = question.kind === "tf" ? "tf" : question.kind === "fill" ? "fill" : "mcq";
                   return (
-                  <div key={`q-${qIndex}`} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4">
+                  <div key={`q-${qIndex}`} className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 dark:border-slate-600 dark:bg-slate-800/50">
                     <div className="mb-2 flex items-center justify-between">
-                      <p className="text-sm font-semibold">Question {qIndex + 1}</p>
+                      <p className="text-sm font-semibold text-neutral-900 dark:text-slate-100">Question {qIndex + 1}</p>
                       {createState.questions.length > 1 && <button type="button" className="text-xs text-brand-primary" onClick={() => removeQuestion(qIndex)}>Remove</button>}
                     </div>
                     <input className="input-base mb-2" placeholder="Question text" value={question.text} onChange={(e) => updateQuestionField(qIndex, "text", e.target.value)} required />
@@ -2424,26 +2633,26 @@ function App() {
                         <button
                           type="button"
                           onClick={() => setQuestionKind(qIndex, "mcq")}
-                          className={`rounded-xl px-3 py-2 text-sm ${qKind === "mcq" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"}`}
+                          className={`rounded-xl px-3 py-2 text-sm ${qKind === "mcq" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}
                         >
                           Multiple choice
                         </button>
                         <button
                           type="button"
                           onClick={() => setQuestionKind(qIndex, "tf")}
-                          className={`rounded-xl px-3 py-2 text-sm ${qKind === "tf" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"}`}
+                          className={`rounded-xl px-3 py-2 text-sm ${qKind === "tf" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}
                         >
                           True / false
                         </button>
                         <button
                           type="button"
                           onClick={() => setQuestionKind(qIndex, "fill")}
-                          className={`rounded-xl px-3 py-2 text-sm ${qKind === "fill" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50"}`}
+                          className={`rounded-xl px-3 py-2 text-sm ${qKind === "fill" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-50 dark:border-slate-600 dark:bg-slate-950 dark:text-slate-300 dark:hover:bg-slate-800"}`}
                         >
                           Fill in the blank
                         </button>
                       </div>
-                      <p className="mt-1.5 text-xs text-neutral-500">
+                      <p className="mt-1.5 text-xs text-neutral-500 dark:text-slate-400">
                         {qKind === "mcq"
                           ? "Starts with four answer choices. Use Add option if you need more."
                           : qKind === "tf"
@@ -2501,7 +2710,7 @@ function App() {
               <button type="button" className="btn-secondary w-full sm:w-auto" onClick={addQuestion}>Add Question</button>
               {createMessage && (
                 <p
-                  className={`text-sm font-medium ${createMessage.includes("success") ? "text-emerald-700" : "text-rose-700"}`}
+                  className={`text-sm font-medium ${createMessage.includes("success") ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}
                 >
                   {createMessage}
                 </p>

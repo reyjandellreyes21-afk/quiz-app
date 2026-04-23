@@ -149,4 +149,59 @@
   .landing-link {
     @apply text-sm font-medium text-brand-primary underline-offset-4 hover:underline;
   }
+
+  .dark .landing-link {
+    @apply text-brand-accent hover:text-sky-300;
+  }
+
+  /* Status / alert strips — readable on dark backgrounds */
+  .app-alert-error {
+    @apply rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800 dark:border-rose-900/55 dark:bg-rose-950/45 dark:text-rose-100;
+  }
+
+  .app-alert-danger-text {
+    @apply text-rose-700 dark:text-rose-300;
+  }
+
+  .app-surface-muted {
+    @apply rounded-xl border border-neutral-200 bg-neutral-50 dark:border-slate-600 dark:bg-slate-800/70 dark:text-slate-100;
+  }
+
+  .app-history-row {
+    @apply rounded-xl border border-neutral-200 bg-neutral-50 p-3 dark:border-slate-600 dark:bg-slate-800/60;
+  }
+
+  /* Marketing footer (logged-out landing): fixed navy palette independent of theme toggle */
+  .landing-site-footer {
+    @apply text-white antialiased;
+    --landing-footer-accent: rgb(45 212 191);
+  }
+
+  .landing-site-footer a:not(.landing-footer-social):hover {
+    @apply text-white underline decoration-white/40 underline-offset-4;
+  }
+
+  .landing-footer-about-link {
+    @apply block text-sm text-white/90 transition hover:text-white;
+  }
+
+  .landing-footer-social {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/25 text-white/90 transition hover:border-white/50 hover:bg-white/10 hover:text-white;
+  }
+
+  @keyframes publish-toast-progress {
+    from {
+      transform: scaleX(1);
+    }
+    to {
+      transform: scaleX(0);
+    }
+  }
+
+  .publish-toast-progress {
+    transform-origin: left center;
+    animation-name: publish-toast-progress;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+  }
 }
