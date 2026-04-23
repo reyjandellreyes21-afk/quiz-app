@@ -15,17 +15,27 @@ const tokenForUser = (user) =>
 
 export const register = async (req, res, next) => {
   try {
-    const { firstName, middleName, lastName, email, password } = req.body;
+    const { username, country, age, acceptedTerms, email, password } = req.body;
+    const normalizedUsername = String(username || "").trim();
     const normalizedEmail = email.toLowerCase();
-    const existing = await User.findOne({ email: normalizedEmail });
-    if (existing) {
+    const existingEmail = await User.findOne({ email: normalizedEmail });
+    if (existingEmail) {
       throw new AppError(409, "Email already registered.");
+    }
+    const existingUsername = normalizedUsername ? await User.findOne({ username: normalizedUsername }).lean() : null;
+    if (existingUsername) {
+      throw new AppError(409, "Username already taken.");
     }
     const passwordHash = await bcrypt.hash(password, 10);
     const user = await User.create({
-      firstName: String(firstName).trim(),
-      middleName: String(middleName || "").trim(),
-      lastName: String(lastName).trim(),
+      firstName: "",
+      middleName: "",
+      lastName: "",
+      username: normalizedUsername,
+      country: String(country || "").trim(),
+      age: Number(age),
+      acceptedTerms: Boolean(acceptedTerms),
+      acceptedTermsAt: acceptedTerms ? new Date() : null,
       email: normalizedEmail,
       passwordHash,
     });
@@ -132,19 +142,27 @@ export const updateMe = async (req, res, next) => {
       firstName,
       middleName,
       lastName,
+      username,
+      avatarUrl,
       email,
       phone,
       birthday,
       address,
+      country,
+      age,
       education,
       gender,
     } = req.body || {};
     const updatingName =
       firstName !== undefined || middleName !== undefined || lastName !== undefined;
     const updatingExtras =
+      username !== undefined ||
+      avatarUrl !== undefined ||
       phone !== undefined ||
       birthday !== undefined ||
       address !== undefined ||
+      country !== undefined ||
+      age !== undefined ||
       education !== undefined ||
       gender !== undefined;
     if (!updatingName && email === undefined && !updatingExtras) {
@@ -165,7 +183,7 @@ export const updateMe = async (req, res, next) => {
       const fn = (userDoc.firstName || "").trim();
       const ln = (userDoc.lastName || "").trim();
       if (fn.length < 2) throw new AppError(400, "First name must be at least 2 characters.");
-      if (ln.length < 2) throw new AppError(400, "Last name must be at least 2 characters.");
+      if (ln && ln.length < 2) throw new AppError(400, "Last name must be at least 2 characters.");
     }
 
     if (email !== undefined) {
@@ -181,10 +199,30 @@ export const updateMe = async (req, res, next) => {
       userDoc.email = normalized;
     }
 
+    if (username !== undefined) {
+      const normalizedUsername = String(username).trim();
+      if (!normalizedUsername) {
+        throw new AppError(400, "Username is required.");
+      }
+      const existingUsername = await User.findOne({ username: normalizedUsername }).lean();
+      if (existingUsername && existingUsername._id.toString() !== req.user.id) {
+        throw new AppError(409, "Username already taken.");
+      }
+      userDoc.username = normalizedUsername;
+    }
+    if (avatarUrl !== undefined) userDoc.avatarUrl = String(avatarUrl).trim();
     if (phone !== undefined) userDoc.phone = String(phone).trim();
     if (address !== undefined) userDoc.address = String(address).trim();
+    if (country !== undefined) userDoc.country = String(country).trim();
     if (education !== undefined) userDoc.education = String(education).trim();
     if (gender !== undefined) userDoc.gender = String(gender).trim();
+    if (age !== undefined) {
+      const parsedAge = Number(age);
+      if (!Number.isInteger(parsedAge) || parsedAge < 13 || parsedAge > 120) {
+        throw new AppError(400, "Age must be between 13 and 120.");
+      }
+      userDoc.age = parsedAge;
+    }
 
     if (birthday !== undefined) {
       const raw = birthday === null || birthday === "" ? null : String(birthday).trim();

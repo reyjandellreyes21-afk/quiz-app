@@ -9,9 +9,10 @@ const authRouter = Router();
 authRouter.post(
   "/register",
   [
-    body("firstName").trim().isLength({ min: 2 }),
-    body("middleName").optional().trim(),
-    body("lastName").trim().isLength({ min: 2 }),
+    body("username").trim().isLength({ min: 3 }),
+    body("country").trim().notEmpty(),
+    body("age").isInt({ min: 13, max: 120 }),
+    body("acceptedTerms").isBoolean().custom((value) => value === true),
     body("email").isEmail().normalizeEmail(),
     body("password").isLength({ min: 8 }),
     validate,

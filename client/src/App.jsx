@@ -67,6 +67,27 @@ const PROFILE_GENDER_OPTIONS = [
   ["other", "Other"],
   ["prefer_not_to_say", "Prefer not to say"],
 ];
+const COUNTRY_OPTIONS = (() => {
+  try {
+    if (typeof Intl !== "undefined" && typeof Intl.DisplayNames === "function" && typeof Intl.supportedValuesOf === "function") {
+      const regionNames = new Intl.DisplayNames(["en"], { type: "region" });
+      const generated = Intl.supportedValuesOf("region")
+        .map((code) => regionNames.of(code))
+        .filter((name) => typeof name === "string" && name.trim().length > 0)
+        .sort((a, b) => a.localeCompare(b));
+      return Array.from(new Set(generated));
+    }
+  } catch {
+    // Ignore and use fallback.
+  }
+  return ["Philippines", "United States", "Canada", "United Kingdom", "Australia", "Japan", "Singapore"];
+})();
+const normalizeCountryValue = (value) => {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) return "";
+  if (trimmed.toLowerCase() === "pilipinas") return "Philippines";
+  return trimmed;
+};
 
 function formatBirthdayDisplay(iso) {
   if (!iso || typeof iso !== "string") return "";
@@ -96,6 +117,17 @@ const toTitleCase = (value) =>
     .map((segment) => (segment ? segment.charAt(0).toUpperCase() + segment.slice(1).toLowerCase() : ""))
     .filter(Boolean)
     .join(" ");
+const splitAddressParts = (address) => {
+  const [addressApartment = "", addressCity = "", addressProvince = "", addressCountry = "", addressPostalCode = ""] = String(address || "")
+    .split(",")
+    .map((part) => part.trim());
+  return { addressApartment, addressCity, addressProvince, addressCountry, addressPostalCode };
+};
+const buildAddressValue = (draft) =>
+  [draft.addressApartment, draft.addressCity, draft.addressProvince, draft.addressCountry, draft.addressPostalCode]
+    .map((part) => String(part || "").trim())
+    .filter(Boolean)
+    .join(", ");
 const getQuizListId = (quiz) => quiz?.id || quiz?._id;
 const isQuizOwner = (quiz, currentUser) => {
   if (!currentUser?.id || quiz?.createdBy == null || quiz.createdBy === "") return false;
@@ -187,6 +219,9 @@ const getApiErrorMessage = (payload, fallback) => {
         .join(" ")
     : "";
   const normalizedDetails = detailed.replace(/\s{2,}/g, " ").trim();
+  if (/^firstName:\s*Invalid value$/i.test(normalizedDetails)) {
+    return "Please enter a valid username.";
+  }
   if (normalizedDetails) return normalizedDetails;
   const genericMessage = payload.error?.message || payload.message || fallback;
   return genericMessage === "Validation failed." ? "Please check your quiz fields and try again." : genericMessage;
@@ -663,13 +698,15 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [signupStep, setSignupStep] = useState(1);
   const [form, setForm] = useState({
-    firstName: "",
-    middleName: "",
-    lastName: "",
     email: "",
     password: "",
     confirmPassword: "",
+    username: "",
+    country: "",
+    age: "",
+    acceptedTerms: false,
   });
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem("quiz_token") || "");
@@ -745,18 +782,28 @@ function App() {
   const [commentDraftByPost, setCommentDraftByPost] = useState({});
   const [profileEditing, setProfileEditing] = useState(false);
   const [profileDraft, setProfileDraft] = useState({
+    avatarUrl: "",
+    username: "",
     firstName: "",
     middleName: "",
     lastName: "",
     email: "",
     phone: "",
     birthday: "",
-    address: "",
+    age: "",
+    addressApartment: "",
+    addressCity: "",
+    addressProvince: "",
+    addressCountry: "",
+    addressPostalCode: "",
     education: "",
     gender: "",
   });
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileError, setProfileError] = useState("");
+  const [profileAddressExpanded, setProfileAddressExpanded] = useState(false);
+  const [profilePreferencesExpanded, setProfilePreferencesExpanded] = useState(false);
+  const profileAvatarInputRef = useRef(null);
 
   const googleBtnRef = useRef(null);
 
@@ -933,6 +980,8 @@ function App() {
             setToken(data.token);
             localStorage.setItem("quiz_token", data.token);
             setMessage("");
+            setActiveView(VIEWS.DASHBOARD);
+            setAuthPanelVisible(false);
           } catch (error) {
             setMessage(error.message || "Google login failed.");
           }
@@ -960,6 +1009,7 @@ function App() {
 
   const openAuthPanel = useCallback((mode) => {
     setAuthMode(mode);
+    setSignupStep(1);
     setMessage("");
     setAuthPanelVisible(true);
   }, []);
@@ -967,6 +1017,7 @@ function App() {
   const closeAuthPanel = useCallback(() => {
     setAuthPanelVisible(false);
     setMessage("");
+    setSignupStep(1);
     setShowAuthPassword(false);
     setShowConfirmPassword(false);
   }, []);
@@ -1053,9 +1104,31 @@ function App() {
   const handleAuth = async (event) => {
     event.preventDefault();
     setMessage("");
-    if (authMode === "signup" && form.password !== form.confirmPassword) {
-      setMessage("Passwords do not match.");
-      return;
+    if (authMode === "signup") {
+      if (signupStep === 1) {
+        if (form.password !== form.confirmPassword) {
+          setMessage("Passwords do not match.");
+          return;
+        }
+        setSignupStep(2);
+        return;
+      }
+      if (!form.username.trim()) {
+        setMessage("Please enter your username.");
+        return;
+      }
+      if (!form.country.trim()) {
+        setMessage("Please select your country.");
+        return;
+      }
+      if (!form.age) {
+        setMessage("Please select your age.");
+        return;
+      }
+      if (!form.acceptedTerms) {
+        setMessage("You must click the checkbox to accept the Terms of Use and Privacy Policy.");
+        return;
+      }
     }
     setAuthLoading(true);
     try {
@@ -1063,9 +1136,10 @@ function App() {
       const body =
         authMode === "signup"
           ? {
-              firstName: form.firstName.trim(),
-              middleName: form.middleName.trim(),
-              lastName: form.lastName.trim(),
+              username: form.username.trim(),
+              country: form.country.trim(),
+              age: Number(form.age),
+              acceptedTerms: form.acceptedTerms,
               email: form.email.trim(),
               password: form.password,
             }
@@ -1074,14 +1148,18 @@ function App() {
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem("quiz_token", data.token);
+      setActiveView(VIEWS.DASHBOARD);
+      setAuthPanelVisible(false);
       setForm({
-        firstName: "",
-        middleName: "",
-        lastName: "",
         email: "",
         password: "",
         confirmPassword: "",
+        username: "",
+        country: "",
+        age: "",
+        acceptedTerms: false,
       });
+      setSignupStep(1);
       setShowAuthPassword(false);
       setShowConfirmPassword(false);
     } catch (error) {
@@ -1130,24 +1208,57 @@ function App() {
 
   const openProfileEdit = () => {
     if (!user) return;
+    const parsedAddress = splitAddressParts(user.address);
     setProfileDraft({
+      avatarUrl: user.avatarUrl || "",
+      username: user.username || user.name || "",
       firstName: user.firstName ?? "",
       middleName: user.middleName ?? "",
       lastName: user.lastName ?? "",
       email: user.email || "",
       phone: user.phone ?? "",
       birthday: user.birthday ?? "",
-      address: user.address ?? "",
+      age: user.age ? String(user.age) : "",
+      addressApartment: parsedAddress.addressApartment,
+      addressCity: parsedAddress.addressCity,
+      addressProvince: parsedAddress.addressProvince,
+      addressCountry: normalizeCountryValue(parsedAddress.addressCountry),
+      addressPostalCode: parsedAddress.addressPostalCode,
       education: user.education ?? "",
       gender: user.gender ?? "",
     });
     setProfileError("");
+    setProfileAddressExpanded(false);
+    setProfilePreferencesExpanded(false);
     setProfileEditing(true);
   };
 
   const cancelProfileEdit = () => {
     setProfileEditing(false);
     setProfileError("");
+    setProfileAddressExpanded(false);
+    setProfilePreferencesExpanded(false);
+  };
+
+  const handleProfileAvatarChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setProfileError("Please choose an image file.");
+      return;
+    }
+    const MAX_AVATAR_FILE_BYTES = 3 * 1024 * 1024;
+    if (file.size > MAX_AVATAR_FILE_BYTES) {
+      setProfileError("Image is too large. Please choose one smaller than 3MB.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfileDraft((prev) => ({ ...prev, avatarUrl: String(reader.result || "") }));
+      setProfileError("");
+    };
+    reader.onerror = () => setProfileError("Could not read selected image.");
+    reader.readAsDataURL(file);
   };
 
   const handleProfileSubmit = async (event) => {
@@ -1160,13 +1271,17 @@ function App() {
         method: "PATCH",
         token,
         body: {
+          avatarUrl: profileDraft.avatarUrl.trim(),
+          username: profileDraft.username.trim(),
           firstName: profileDraft.firstName.trim(),
           middleName: profileDraft.middleName.trim(),
           lastName: profileDraft.lastName.trim(),
           email: (user?.email || "").trim(),
           phone: profileDraft.phone.trim(),
           birthday: profileDraft.birthday.trim() || null,
-          address: profileDraft.address.trim(),
+          address: buildAddressValue(profileDraft),
+          country: normalizeCountryValue(profileDraft.addressCountry),
+          age: profileDraft.age ? Number(profileDraft.age) : undefined,
           education: profileDraft.education.trim(),
           gender: profileDraft.gender.trim(),
         },
@@ -1720,148 +1835,182 @@ function App() {
                 </button>
                 <div className="mb-8 pr-10">
                   <h2 id="auth-modal-title" className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-slate-100 md:text-[1.65rem]">
-                    {authMode === "signup" ? "Create an account" : "Welcome back"}
+                    {authMode === "signup" ? (signupStep === 1 ? "Create an account" : "Tell us a bit about yourself!") : "Welcome back"}
                   </h2>
                   <p className="mt-4 max-w-md text-sm leading-relaxed text-neutral-600 dark:text-slate-400 md:text-[15px] md:leading-relaxed">
                     {authMode === "signup"
-                      ? "Create your account to join exam-focused groups and start your review plan."
+                      ? signupStep === 1
+                        ? "Create your account to join exam-focused groups and start your review plan."
+                        : "This info will help us keep Brainly safe for everyone."
                       : "Sign in with email or Google to continue your forum and review progress."}
                   </p>
                 </div>
 
                 <form onSubmit={handleAuth} className="space-y-5">
-                {authMode === "signup" && (
-                  <div className="flex flex-col gap-y-1">
-                    <div className="grid grid-cols-1 gap-x-2 md:grid-cols-3 md:gap-x-3">
-                      <span className="block text-sm font-semibold tracking-tight text-neutral-900 dark:text-slate-100">Name</span>
-                      <div className="hidden min-w-0 md:block" aria-hidden="true" />
-                      <div className="hidden min-w-0 md:block" aria-hidden="true" />
-                    </div>
-                    <div className="grid grid-cols-1 gap-y-3 md:grid-cols-3 md:gap-x-3 md:gap-y-0">
-                      <div className="min-w-0">
-                        <label htmlFor="auth-first-name" className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400">
-                          First name
-                        </label>
-                        <input
-                          id="auth-first-name"
-                          name="firstName"
-                          className="landing-input"
-                          placeholder="Jane"
-                          autoComplete="given-name"
-                          value={form.firstName}
-                          onChange={(e) => setForm((prev) => ({ ...prev, firstName: e.target.value }))}
-                          required
-                          minLength={2}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <label htmlFor="auth-middle-name" className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400">
-                          Middle <span className="font-normal text-neutral-500 dark:text-slate-500">(opt.)</span>
-                        </label>
-                        <input
-                          id="auth-middle-name"
-                          name="middleName"
-                          className="landing-input"
-                          placeholder="Maria"
-                          autoComplete="additional-name"
-                          value={form.middleName}
-                          onChange={(e) => setForm((prev) => ({ ...prev, middleName: e.target.value }))}
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <label htmlFor="auth-last-name" className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400">
-                          Last name
-                        </label>
-                        <input
-                          id="auth-last-name"
-                          name="lastName"
-                          className="landing-input"
-                          placeholder="Reyes"
-                          autoComplete="family-name"
-                          value={form.lastName}
-                          onChange={(e) => setForm((prev) => ({ ...prev, lastName: e.target.value }))}
-                          required
-                          minLength={2}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-                <div>
-                  <label htmlFor="auth-email" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
-                    Email
-                  </label>
-                  <input
-                    id="auth-email"
-                    name="email"
-                    className="landing-input"
-                    type="email"
-                    placeholder="you@example.com"
-                    autoComplete="email"
-                    value={form.email}
-                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                    required
-                  />
-                </div>
-                <div>
-                  <label htmlFor="auth-password" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
-                    Password
-                  </label>
-                  <div className="relative">
-                    <input
-                      id="auth-password"
-                      name="password"
-                      className="landing-input pr-11"
-                      type={showAuthPassword ? "text" : "password"}
-                      placeholder="At least 8 characters"
-                      minLength={8}
-                      autoComplete={authMode === "signup" ? "new-password" : "current-password"}
-                      value={form.password}
-                      onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                      onClick={() => setShowAuthPassword((prev) => !prev)}
-                      aria-label={showAuthPassword ? "Hide password" : "Show password"}
-                      aria-pressed={showAuthPassword}
-                      tabIndex={0}
-                    >
-                      {showAuthPassword ? <EyeHidePasswordIcon /> : <EyeShowPasswordIcon />}
-                    </button>
-                  </div>
-                </div>
-                {authMode === "signup" && (
-                  <div>
-                    <label htmlFor="auth-confirm-password" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
-                      Confirm password
-                    </label>
-                    <div className="relative">
+                {authMode !== "signup" || signupStep === 1 ? (
+                  <>
+                    <div>
+                      <label htmlFor="auth-email" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
+                        Email
+                      </label>
                       <input
-                        id="auth-confirm-password"
-                        name="confirmPassword"
-                        className="landing-input pr-11"
-                        type={showConfirmPassword ? "text" : "password"}
-                        placeholder="Re-enter your password"
-                        minLength={8}
-                        autoComplete="new-password"
-                        value={form.confirmPassword}
-                        onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                        id="auth-email"
+                        name="email"
+                        className="landing-input"
+                        type="email"
+                        placeholder="you@example.com"
+                        autoComplete="email"
+                        value={form.email}
+                        onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                         required
                       />
-                      <button
-                        type="button"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                        aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
-                        aria-pressed={showConfirmPassword}
-                        tabIndex={0}
-                      >
-                        {showConfirmPassword ? <EyeHidePasswordIcon /> : <EyeShowPasswordIcon />}
-                      </button>
                     </div>
-                  </div>
+                    <div>
+                      <label htmlFor="auth-password" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
+                        Password
+                      </label>
+                      <div className="relative">
+                        <input
+                          id="auth-password"
+                          name="password"
+                          className="landing-input pr-11"
+                          type={showAuthPassword ? "text" : "password"}
+                          placeholder="At least 8 characters"
+                          minLength={8}
+                          autoComplete={authMode === "signup" ? "new-password" : "current-password"}
+                          value={form.password}
+                          onChange={(e) => setForm((prev) => ({ ...prev, password: e.target.value }))}
+                          required
+                        />
+                        <button
+                          type="button"
+                          className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                          onClick={() => setShowAuthPassword((prev) => !prev)}
+                          aria-label={showAuthPassword ? "Hide password" : "Show password"}
+                          aria-pressed={showAuthPassword}
+                          tabIndex={0}
+                        >
+                          {showAuthPassword ? <EyeHidePasswordIcon /> : <EyeShowPasswordIcon />}
+                        </button>
+                      </div>
+                    </div>
+                    {authMode === "signup" && (
+                      <div>
+                        <label htmlFor="auth-confirm-password" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
+                          Confirm password
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="auth-confirm-password"
+                            name="confirmPassword"
+                            className="landing-input pr-11"
+                            type={showConfirmPassword ? "text" : "password"}
+                            placeholder="Re-enter your password"
+                            minLength={8}
+                            autoComplete="new-password"
+                            value={form.confirmPassword}
+                            onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
+                            required
+                          />
+                          <button
+                            type="button"
+                            className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-neutral-500 transition hover:bg-neutral-100 hover:text-neutral-800 focus:outline-none focus:ring-2 focus:ring-brand-primary/35 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+                            onClick={() => setShowConfirmPassword((prev) => !prev)}
+                            aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                            aria-pressed={showConfirmPassword}
+                            tabIndex={0}
+                          >
+                            {showConfirmPassword ? <EyeHidePasswordIcon /> : <EyeShowPasswordIcon />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div>
+                      <label htmlFor="auth-username" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
+                        Username
+                      </label>
+                      <input
+                        id="auth-username"
+                        name="username"
+                        className="landing-input"
+                        type="text"
+                        placeholder="Choose a username"
+                        value={form.username}
+                        onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
+                        required
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor="auth-country" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
+                          Country
+                        </label>
+                        <select
+                          id="auth-country"
+                          name="country"
+                          className="landing-input"
+                          value={form.country}
+                          onChange={(e) => setForm((prev) => ({ ...prev, country: e.target.value }))}
+                          required
+                        >
+                          <option value="">Select country</option>
+                          {COUNTRY_OPTIONS.map((countryName) => (
+                            <option key={countryName} value={countryName}>
+                              {countryName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label htmlFor="auth-age" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
+                          Age
+                        </label>
+                        <select
+                          id="auth-age"
+                          name="age"
+                          className="landing-input"
+                          value={form.age}
+                          onChange={(e) => setForm((prev) => ({ ...prev, age: e.target.value }))}
+                          required
+                        >
+                          <option value="">Select your age</option>
+                          {Array.from({ length: 88 }, (_, i) => i + 13).map((age) => (
+                            <option key={age} value={String(age)}>
+                              {age}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                    <label className="flex items-start gap-2.5 rounded-xl border border-neutral-200/80 bg-neutral-50/70 px-3 py-2.5 text-sm text-neutral-700 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300">
+                      <input
+                        type="checkbox"
+                        name="acceptedTerms"
+                        className="mt-0.5 h-4 w-4 rounded border-neutral-300 text-brand-primary focus:ring-brand-primary/35 dark:border-slate-500"
+                        checked={form.acceptedTerms}
+                        onChange={(e) => {
+                          const checked = e.target.checked;
+                          setForm((prev) => ({ ...prev, acceptedTerms: checked }));
+                          if (checked && message.includes("checkbox")) setMessage("");
+                        }}
+                        required
+                      />
+                      <span>
+                        I accept the{" "}
+                        <a href="#" className="font-semibold text-neutral-900 underline dark:text-slate-100">
+                          Terms of Use
+                        </a>{" "}
+                        and{" "}
+                        <a href="#" className="font-semibold text-neutral-900 underline dark:text-slate-100">
+                          Privacy Policy
+                        </a>
+                        .
+                      </span>
+                    </label>
+                  </>
                 )}
                 {message && (
                   <p className="app-alert-error" role="alert">
@@ -1874,49 +2023,71 @@ function App() {
                       ? "Creating account…"
                       : "Signing in…"
                     : authMode === "signup"
-                      ? "Create account"
+                      ? signupStep === 1
+                        ? "Next"
+                        : "Create account"
                       : "Log in"}
                 </button>
                 </form>
 
-                <div className="my-6 flex items-center gap-3">
-                  <span className="h-px flex-1 bg-neutral-200 dark:bg-slate-600" />
-                  <span className="text-xs font-medium uppercase tracking-wide text-neutral-600 dark:text-slate-400">or</span>
-                  <span className="h-px flex-1 bg-neutral-200 dark:bg-slate-600" />
-                </div>
+                {(authMode !== "signup" || signupStep === 1) && (
+                  <>
+                    <div className="my-6 flex items-center gap-3">
+                      <span className="h-px flex-1 bg-neutral-200 dark:bg-slate-600" />
+                      <span className="text-xs font-medium uppercase tracking-wide text-neutral-600 dark:text-slate-400">or</span>
+                      <span className="h-px flex-1 bg-neutral-200 dark:bg-slate-600" />
+                    </div>
 
-                <div className="flex flex-col items-center gap-3">
-                  {GOOGLE_CLIENT_ID ? (
-                    <div
-                      className="flex min-h-[44px] w-full max-w-[320px] justify-center [&>div]:w-full [&>div]:flex [&>div]:justify-center"
-                      ref={googleBtnRef}
-                    />
-                  ) : (
-                    <p className="text-center text-xs text-neutral-500 dark:text-slate-400">
-                      Add{" "}
-                      <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] text-neutral-700 dark:bg-slate-800 dark:text-slate-200">VITE_GOOGLE_CLIENT_ID</code>{" "}
-                      for Google sign-in.
-                    </p>
-                  )}
-                </div>
+                    <div className="flex flex-col items-center gap-3">
+                      {GOOGLE_CLIENT_ID ? (
+                        <div
+                          className="flex min-h-[44px] w-full max-w-[320px] justify-center [&>div]:w-full [&>div]:flex [&>div]:justify-center"
+                          ref={googleBtnRef}
+                        />
+                      ) : (
+                        <p className="text-center text-xs text-neutral-500 dark:text-slate-400">
+                          Add{" "}
+                          <code className="rounded bg-neutral-100 px-1 py-0.5 text-[11px] text-neutral-700 dark:bg-slate-800 dark:text-slate-200">VITE_GOOGLE_CLIENT_ID</code>{" "}
+                          for Google sign-in.
+                        </p>
+                      )}
+                    </div>
+                  </>
+                )}
 
                 <p className="mt-8 text-center text-sm text-neutral-600 dark:text-slate-400">
                   {authMode === "signup" ? (
                     <>
-                      Already have an account?{" "}
-                      <button
-                        type="button"
-                        className="landing-link"
-                        onClick={() => {
-                          setAuthMode("login");
-                          setMessage("");
-                          setShowAuthPassword(false);
-                          setShowConfirmPassword(false);
-                          setForm((prev) => ({ ...prev, confirmPassword: "" }));
-                        }}
-                      >
-                        Log in
-                      </button>
+                      {signupStep === 1 ? (
+                        <>
+                          Already have an account?{" "}
+                          <button
+                            type="button"
+                            className="landing-link"
+                            onClick={() => {
+                              setAuthMode("login");
+                              setSignupStep(1);
+                              setMessage("");
+                              setShowAuthPassword(false);
+                              setShowConfirmPassword(false);
+                              setForm((prev) => ({ ...prev, confirmPassword: "" }));
+                            }}
+                          >
+                            Log in
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className="landing-link"
+                          onClick={() => {
+                            setSignupStep(1);
+                            setMessage("");
+                          }}
+                        >
+                          Back
+                        </button>
+                      )}
                     </>
                   ) : (
                     <>
@@ -1926,6 +2097,7 @@ function App() {
                         className="landing-link"
                         onClick={() => {
                           setAuthMode("signup");
+                          setSignupStep(1);
                           setMessage("");
                           setShowAuthPassword(false);
                           setShowConfirmPassword(false);
@@ -2012,7 +2184,7 @@ function App() {
                 aria-label="Account menu"
                 onClick={() => setAccountMenuOpen((prev) => !prev)}
               >
-                <span className="max-w-[10rem] truncate">{getDisplayNameFromUser(user) || "Account"}</span>
+                <span className="max-w-[10rem] truncate">{user?.username || getDisplayNameFromUser(user) || "Account"}</span>
                 <ChevronDownIcon className={`shrink-0 text-neutral-500 transition-transform dark:text-slate-400 ${accountMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {accountMenuOpen && (
@@ -2647,14 +2819,63 @@ function App() {
             </div>
             {user ? (
               profileEditing ? (
-                <form onSubmit={handleProfileSubmit} className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-xl font-bold text-brand-primary ring-1 ring-brand-border">
-                      {(getDisplayNameFromUser(profileDraft) || user.email || "?").charAt(0)}
+                <form onSubmit={handleProfileSubmit} className="space-y-6">
+                  <div className="grid grid-cols-1 items-end gap-4 rounded-2xl border border-neutral-200/80 bg-gradient-to-br from-white to-neutral-50 p-5 shadow-sm ring-1 ring-neutral-100/80 dark:border-slate-700/80 dark:from-slate-900 dark:to-slate-900/70 dark:ring-slate-800/80 md:grid-cols-[auto_minmax(13rem,1fr)_minmax(16rem,1fr)]">
+                    <div className="flex flex-col items-start gap-2">
+                      <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-soft text-xl font-bold text-brand-primary ring-1 ring-brand-border">
+                        {profileDraft.avatarUrl ? (
+                          <img src={profileDraft.avatarUrl} alt="Profile avatar preview" className="h-full w-full object-cover" />
+                        ) : (
+                          (String(profileDraft.username || "").trim().charAt(0) || String(user?.username || "").trim().charAt(0) || "?").toUpperCase()
+                        )}
+                      </div>
+                      <input
+                        ref={profileAvatarInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProfileAvatarChange}
+                      />
+                      <button
+                        type="button"
+                        className="btn-secondary !px-3 !py-1.5 text-xs"
+                        onClick={() => profileAvatarInputRef.current?.click()}
+                      >
+                        Change photo
+                      </button>
                     </div>
-                    <p className="text-sm text-neutral-600 dark:text-slate-400">Update your name.</p>
+                    <div className="min-w-0">
+                      <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-username-inline">
+                        Username
+                      </label>
+                      <input
+                        id="profile-username-inline"
+                        name="username"
+                        type="text"
+                        className="input-base h-9 min-w-[13rem] text-sm font-semibold"
+                        value={profileDraft.username}
+                        onChange={(e) => setProfileDraft((prev) => ({ ...prev, username: e.target.value }))}
+                        required
+                        minLength={3}
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-email-inline">
+                        Email
+                      </label>
+                      <input
+                        id="profile-email-inline"
+                        name="email"
+                        type="email"
+                        readOnly
+                        aria-readonly="true"
+                        className="input-base h-9 cursor-default border-0 read-only:border-0 read-only:bg-neutral-50 read-only:text-neutral-700 dark:read-only:bg-slate-900/50 dark:read-only:text-slate-300"
+                        autoComplete="email"
+                        value={profileDraft.email}
+                      />
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-y-1">
+                  <div className="flex flex-col gap-y-2 rounded-2xl border border-neutral-200/80 bg-white p-5 shadow-sm ring-1 ring-neutral-100/80 dark:border-slate-700/80 dark:bg-slate-900/70 dark:ring-slate-800/80">
                     <div className="grid grid-cols-1 gap-x-3 md:grid-cols-3 md:gap-x-4">
                       <span className="block text-sm font-semibold tracking-tight text-neutral-900 dark:text-slate-100">Name</span>
                       <div className="hidden min-w-0 md:block" aria-hidden="true" />
@@ -2709,30 +2930,71 @@ function App() {
                           autoComplete="family-name"
                           value={profileDraft.lastName}
                           onChange={(e) => setProfileDraft((prev) => ({ ...prev, lastName: e.target.value }))}
-                          required
-                          minLength={2}
+                          minLength={0}
                         />
                       </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="label-base" htmlFor="profile-email">
-                      Email
-                    </label>
-                    <input
-                      id="profile-email"
-                      name="email"
-                      type="email"
-                      readOnly
-                      aria-readonly="true"
-                      className="input-base mt-1 cursor-default read-only:border-neutral-200 read-only:bg-neutral-50 read-only:text-neutral-700 dark:read-only:border-slate-600 dark:read-only:bg-slate-900/50 dark:read-only:text-slate-300"
-                      autoComplete="email"
-                      value={profileDraft.email}
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-8 md:gap-x-4">
+                  <div className="space-y-3 rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-sm ring-1 ring-neutral-100/80 dark:border-slate-700/80 dark:bg-slate-900/70 dark:ring-slate-800/80">
+                    <button
+                      type="button"
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition ${
+                        profilePreferencesExpanded
+                          ? "bg-transparent shadow-none"
+                          : "bg-neutral-50 shadow-sm hover:bg-neutral-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                      }`}
+                      onClick={() => setProfilePreferencesExpanded((prev) => !prev)}
+                      aria-expanded={profilePreferencesExpanded}
+                      aria-controls="profile-preferences-fields"
+                    >
+                      <span className="block text-sm font-semibold tracking-tight text-neutral-900 dark:text-slate-100">Preferences</span>
+                      <span
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 dark:text-slate-300 ${
+                          profilePreferencesExpanded
+                            ? "border border-neutral-200 bg-transparent dark:border-slate-600"
+                            : "border border-transparent bg-neutral-50 dark:bg-slate-800/60"
+                        }`}
+                      >
+                        <ChevronDownIcon className={`h-4 w-4 transition-transform ${profilePreferencesExpanded ? "rotate-180" : ""}`} />
+                      </span>
+                    </button>
+                    {profilePreferencesExpanded ? (
+                      <div id="profile-preferences-fields" className="space-y-4 border-t border-neutral-200/80 pt-3 dark:border-slate-700/80">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-4">
+                        <div className="min-w-0">
+                          <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-age">
+                            Age
+                          </label>
+                          <input
+                            id="profile-age"
+                            name="age"
+                            type="number"
+                            min={13}
+                            max={120}
+                            className="input-base mt-1"
+                            value={profileDraft.age}
+                            onChange={(e) => setProfileDraft((prev) => ({ ...prev, age: e.target.value }))}
+                          />
+                        </div>
+                        <div className="min-w-0">
+                          <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-education">
+                            Education
+                          </label>
+                          <input
+                            id="profile-education"
+                            name="education"
+                            type="text"
+                            autoComplete="off"
+                            className="input-base mt-1"
+                            placeholder="e.g. BS Computer Science"
+                            value={profileDraft.education}
+                            onChange={(e) => setProfileDraft((prev) => ({ ...prev, education: e.target.value }))}
+                          />
+                        </div>
+                        </div>
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-8 md:gap-x-4">
                     <div className="min-w-0 md:col-span-2">
-                      <label className="label-base" htmlFor="profile-gender">
+                      <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-gender">
                         Gender
                       </label>
                       <select
@@ -2751,7 +3013,7 @@ function App() {
                       </select>
                     </div>
                     <div className="min-w-0 md:col-span-2">
-                      <label className="label-base" htmlFor="profile-birthday">
+                      <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-birthday">
                         Birthday
                       </label>
                       <input
@@ -2764,7 +3026,7 @@ function App() {
                       />
                     </div>
                     <div className="min-w-0 md:col-span-4">
-                      <label className="label-base" htmlFor="profile-phone">
+                      <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-phone">
                         Phone number
                       </label>
                       <input
@@ -2778,42 +3040,126 @@ function App() {
                         onChange={(e) => setProfileDraft((prev) => ({ ...prev, phone: e.target.value }))}
                       />
                     </div>
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
-                  <div>
-                    <label className="label-base" htmlFor="profile-address">
-                      Address
-                    </label>
-                    <textarea
-                      id="profile-address"
-                      name="address"
-                      rows={3}
-                      autoComplete="street-address"
-                      className="input-base mt-1 min-h-[5rem] resize-y"
-                      value={profileDraft.address}
-                      onChange={(e) => setProfileDraft((prev) => ({ ...prev, address: e.target.value }))}
-                    />
-                  </div>
-                  <div>
-                    <label className="label-base" htmlFor="profile-education">
-                      Education
-                    </label>
-                    <input
-                      id="profile-education"
-                      name="education"
-                      type="text"
-                      autoComplete="off"
-                      className="input-base mt-1"
-                      placeholder="e.g. BS Computer Science"
-                      value={profileDraft.education}
-                      onChange={(e) => setProfileDraft((prev) => ({ ...prev, education: e.target.value }))}
-                    />
+                  <div className="space-y-3 rounded-2xl border border-neutral-200/80 bg-white p-4 shadow-sm ring-1 ring-neutral-100/80 dark:border-slate-700/80 dark:bg-slate-900/70 dark:ring-slate-800/80">
+                    <button
+                      type="button"
+                      className={`flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left transition ${
+                        profileAddressExpanded
+                          ? "bg-transparent shadow-none"
+                          : "bg-neutral-50 shadow-sm hover:bg-neutral-100 dark:bg-slate-800/60 dark:hover:bg-slate-800"
+                      }`}
+                      onClick={() => setProfileAddressExpanded((prev) => !prev)}
+                      aria-expanded={profileAddressExpanded}
+                      aria-controls="profile-address-fields"
+                    >
+                      <span className="block text-sm font-semibold tracking-tight text-neutral-900 dark:text-slate-100">Address</span>
+                      <span
+                        className={`inline-flex h-7 w-7 items-center justify-center rounded-lg text-neutral-500 dark:text-slate-300 ${
+                          profileAddressExpanded
+                            ? "border border-neutral-200 bg-transparent dark:border-slate-600"
+                            : "border border-transparent bg-neutral-50 dark:bg-slate-800/60"
+                        }`}
+                      >
+                        <ChevronDownIcon className={`h-4 w-4 transition-transform ${profileAddressExpanded ? "rotate-180" : ""}`} />
+                      </span>
+                    </button>
+                    {profileAddressExpanded ? (
+                      <div id="profile-address-fields" className="mt-2 space-y-4 border-t border-neutral-200/80 pt-3 dark:border-slate-700/80">
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-3 md:gap-x-4">
+                        <div className="min-w-0">
+                        <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-address-apartment">
+                          Appartment, suite, etc
+                        </label>
+                        <input
+                          id="profile-address-apartment"
+                          name="addressApartment"
+                          type="text"
+                          autoComplete="address-line1"
+                          className="input-base mt-1"
+                          value={profileDraft.addressApartment}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, addressApartment: e.target.value }))}
+                        />
+                      </div>
+                        <div className="min-w-0">
+                        <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-address-city">
+                          City
+                        </label>
+                        <input
+                          id="profile-address-city"
+                          name="addressCity"
+                          type="text"
+                          autoComplete="address-level2"
+                          className="input-base mt-1"
+                          value={profileDraft.addressCity}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, addressCity: e.target.value }))}
+                        />
+                      </div>
+                        <div className="min-w-0">
+                        <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-address-province">
+                          Province
+                        </label>
+                        <input
+                          id="profile-address-province"
+                          name="addressProvince"
+                          type="text"
+                          autoComplete="address-level1"
+                          className="input-base mt-1"
+                          value={profileDraft.addressProvince}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, addressProvince: e.target.value }))}
+                        />
+                        </div>
+                      </div>
+                      <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-x-4">
+                        <div className="min-w-0">
+                        <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-address-country">
+                          Country
+                        </label>
+                        <select
+                          id="profile-address-country"
+                          name="addressCountry"
+                          className="input-base mt-1"
+                          value={profileDraft.addressCountry}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, addressCountry: e.target.value }))}
+                        >
+                          {profileDraft.addressCountry && !COUNTRY_OPTIONS.includes(profileDraft.addressCountry) ? (
+                            <option value={profileDraft.addressCountry}>{profileDraft.addressCountry}</option>
+                          ) : null}
+                          <option value="">Select country</option>
+                          {COUNTRY_OPTIONS.map((countryName) => (
+                            <option key={countryName} value={countryName}>
+                              {countryName}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                        <div className="min-w-0">
+                        <label className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400" htmlFor="profile-address-postal-code">
+                          Postal Code
+                        </label>
+                        <input
+                          id="profile-address-postal-code"
+                          name="addressPostalCode"
+                          type="text"
+                          autoComplete="postal-code"
+                          className="input-base mt-1"
+                          value={profileDraft.addressPostalCode}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, addressPostalCode: e.target.value }))}
+                        />
+                        </div>
+                      </div>
+                      </div>
+                    ) : null}
                   </div>
                   {profileError ? (
                     <p className="app-alert-danger-text text-sm" role="alert">
                       {profileError}
                     </p>
                   ) : null}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap justify-end gap-2 border-t border-neutral-200/80 pt-5 dark:border-slate-700/80">
                     <button type="submit" className="btn-primary min-w-[7rem]" disabled={profileSaving}>
                       {profileSaving ? "Saving…" : "Save changes"}
                     </button>
@@ -2823,55 +3169,93 @@ function App() {
                   </div>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  <div className="flex flex-wrap items-center gap-4">
-                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-xl font-bold text-brand-primary ring-1 ring-brand-border">
-                      {(getDisplayNameFromUser(user) || "?").charAt(0)}
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center gap-5 rounded-2xl border border-neutral-200/80 bg-gradient-to-br from-white to-neutral-50 p-5 shadow-sm dark:border-slate-700/80 dark:from-slate-900 dark:to-slate-900/70">
+                    <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-brand-soft text-2xl font-bold text-brand-primary ring-1 ring-brand-border">
+                      {user.avatarUrl ? (
+                        <img src={user.avatarUrl} alt="Profile avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        (String(user?.username || "").trim().charAt(0) || "?").toUpperCase()
+                      )}
                     </div>
                     <div>
-                      <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{getDisplayNameFromUser(user)}</p>
-                      <p className="text-sm text-neutral-600 dark:text-slate-400">{user.email}</p>
+                      <p className="text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">{getDisplayNameFromUser(user)}</p>
+                      <p className="mt-1 text-base text-neutral-600 dark:text-slate-400">{user.email}</p>
                     </div>
                   </div>
                   {(user.phone ||
                     user.birthday ||
                     user.address ||
+                    user.country ||
+                    user.age ||
                     user.education ||
                     user.gender) && (
-                    <dl className="grid max-w-lg gap-x-6 gap-y-2 text-sm md:grid-cols-[8rem_1fr]">
+                    <dl className="grid gap-3 text-sm md:grid-cols-2">
+                      {user.country ? (
+                        <>
+                          <dt className="sr-only">Country</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Country</p>
+                            <p className="mt-1 text-base font-medium text-neutral-900 dark:text-slate-100">{user.country}</p>
+                          </dd>
+                        </>
+                      ) : null}
+                      {user.age ? (
+                        <>
+                          <dt className="sr-only">Age</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Age</p>
+                            <p className="mt-1 text-base font-medium text-neutral-900 dark:text-slate-100">{user.age}</p>
+                          </dd>
+                        </>
+                      ) : null}
                       {user.phone ? (
                         <>
-                          <dt className="text-neutral-500 dark:text-slate-400">Phone</dt>
-                          <dd className="text-neutral-900 dark:text-slate-100">{user.phone}</dd>
+                          <dt className="sr-only">Phone</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Phone</p>
+                            <p className="mt-1 text-base font-medium text-neutral-900 dark:text-slate-100">{user.phone}</p>
+                          </dd>
                         </>
                       ) : null}
                       {user.birthday ? (
                         <>
-                          <dt className="text-neutral-500 dark:text-slate-400">Birthday</dt>
-                          <dd className="text-neutral-900 dark:text-slate-100">{formatBirthdayDisplay(user.birthday)}</dd>
+                          <dt className="sr-only">Birthday</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Birthday</p>
+                            <p className="mt-1 text-base font-medium text-neutral-900 dark:text-slate-100">{formatBirthdayDisplay(user.birthday)}</p>
+                          </dd>
                         </>
                       ) : null}
                       {user.address ? (
                         <>
-                          <dt className="text-neutral-500 dark:text-slate-400">Address</dt>
-                          <dd className="whitespace-pre-wrap text-neutral-900 dark:text-slate-100">{user.address}</dd>
+                          <dt className="sr-only">Address</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 md:col-span-2 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Address</p>
+                            <p className="mt-1 whitespace-pre-wrap text-base font-medium text-neutral-900 dark:text-slate-100">{user.address}</p>
+                          </dd>
                         </>
                       ) : null}
                       {user.education ? (
                         <>
-                          <dt className="text-neutral-500 dark:text-slate-400">Education</dt>
-                          <dd className="text-neutral-900 dark:text-slate-100">{user.education}</dd>
+                          <dt className="sr-only">Education</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Education</p>
+                            <p className="mt-1 text-base font-medium text-neutral-900 dark:text-slate-100">{user.education}</p>
+                          </dd>
                         </>
                       ) : null}
                       {user.gender ? (
                         <>
-                          <dt className="text-neutral-500 dark:text-slate-400">Gender</dt>
-                          <dd className="text-neutral-900 dark:text-slate-100">{formatGenderDisplay(user.gender)}</dd>
+                          <dt className="sr-only">Gender</dt>
+                          <dd className="rounded-xl border border-neutral-200/80 bg-white px-4 py-3 dark:border-slate-700/80 dark:bg-slate-900/70">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Gender</p>
+                            <p className="mt-1 text-base font-medium text-neutral-900 dark:text-slate-100">{formatGenderDisplay(user.gender)}</p>
+                          </dd>
                         </>
                       ) : null}
                     </dl>
                   )}
-                  <p className="text-xs text-neutral-500 dark:text-slate-400">Details refresh from the server when you open this page.</p>
                 </div>
               )
             ) : (

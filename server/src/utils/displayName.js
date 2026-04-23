@@ -1,4 +1,4 @@
-/** Full display string from structured name + legacy `name` fallback. */
+/** Full display string from structured name + username fallback. */
 export function displayNameFromDocument(doc) {
   if (!doc) return "";
   const fn = typeof doc.firstName === "string" ? doc.firstName.trim() : "";
@@ -6,7 +6,7 @@ export function displayNameFromDocument(doc) {
   const ln = typeof doc.lastName === "string" ? doc.lastName.trim() : "";
   const fromParts = [fn, mn, ln].filter(Boolean).join(" ");
   if (fromParts) return fromParts;
-  return typeof doc.name === "string" ? doc.name.trim() : "";
+  return typeof doc.username === "string" ? doc.username.trim() : "";
 }
 
 function birthdayToIsoDate(d) {
@@ -28,6 +28,10 @@ export function userToClient(doc) {
     lastName: o.lastName ?? "",
     name: displayNameFromDocument(o),
     email: o.email,
+    username: o.username ?? "",
+    country: o.country ?? "",
+    age: o.age ?? null,
+    acceptedTerms: Boolean(o.acceptedTerms),
     avatarUrl: o.avatarUrl || "",
     phone: o.phone ?? "",
     birthday: birthdayToIsoDate(o.birthday),
