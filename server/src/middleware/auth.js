@@ -2,6 +2,7 @@ import jwt from "jsonwebtoken";
 import { config } from "../config/config.js";
 import { AppError } from "../errors/AppError.js";
 import { User } from "../models/User.js";
+import { displayNameFromDocument } from "../utils/displayName.js";
 
 export const requireAuth = async (req, _res, next) => {
   const authHeader = req.headers.authorization;
@@ -16,7 +17,11 @@ export const requireAuth = async (req, _res, next) => {
     if (!user) {
       return next(new AppError(401, "User for token no longer exists."));
     }
-    req.user = { id: user._id.toString(), email: user.email, name: user.name };
+    req.user = {
+      id: user._id.toString(),
+      email: user.email,
+      name: displayNameFromDocument(user),
+    };
     return next();
   } catch {
     return next(new AppError(401, "Invalid or expired token."));

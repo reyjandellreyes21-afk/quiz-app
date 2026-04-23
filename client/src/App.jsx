@@ -52,6 +52,43 @@ const formatDisplayName = (name) => {
     .filter(Boolean)
     .join(" ");
 };
+/** Prefer structured name fields from the API; fall back to legacy `name` string. */
+const getDisplayNameFromUser = (user) => {
+  if (!user || typeof user !== "object") return "";
+  const parts = [user.firstName, user.middleName, user.lastName].map((s) => String(s ?? "").trim()).filter(Boolean);
+  if (parts.length > 0) return formatDisplayName(parts.join(" "));
+  return formatDisplayName(user.name || "");
+};
+
+const PROFILE_GENDER_OPTIONS = [
+  ["female", "Female"],
+  ["male", "Male"],
+  ["non_binary", "Non-binary"],
+  ["other", "Other"],
+  ["prefer_not_to_say", "Prefer not to say"],
+];
+
+function formatBirthdayDisplay(iso) {
+  if (!iso || typeof iso !== "string") return "";
+  const parts = iso.split("-");
+  if (parts.length !== 3) return iso;
+  const y = Number(parts[0]);
+  const m = Number(parts[1]);
+  const d = Number(parts[2]);
+  if (!y || !m || !d) return iso;
+  try {
+    return new Date(y, m - 1, d).toLocaleDateString(undefined, { dateStyle: "medium" });
+  } catch {
+    return iso;
+  }
+}
+
+function formatGenderDisplay(value) {
+  const v = String(value || "").trim();
+  if (!v) return "";
+  const found = PROFILE_GENDER_OPTIONS.find(([k]) => k === v);
+  return found ? found[1] : v;
+}
 const toTitleCase = (value) =>
   String(value || "")
     .trim()
@@ -626,7 +663,14 @@ function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(() => localStorage.getItem("quiz_token") || "");
   const [message, setMessage] = useState("");
@@ -699,6 +743,20 @@ function App() {
   const [likedPostIds, setLikedPostIds] = useState({});
   const [postComments, setPostComments] = useState({});
   const [commentDraftByPost, setCommentDraftByPost] = useState({});
+  const [profileEditing, setProfileEditing] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({
+    firstName: "",
+    middleName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    birthday: "",
+    address: "",
+    education: "",
+    gender: "",
+  });
+  const [profileSaving, setProfileSaving] = useState(false);
+  const [profileError, setProfileError] = useState("");
 
   const googleBtnRef = useRef(null);
 
@@ -966,6 +1024,13 @@ function App() {
   }, [token, activeView]);
 
   useEffect(() => {
+    if (activeView !== VIEWS.PROFILE) {
+      setProfileEditing(false);
+      setProfileError("");
+    }
+  }, [activeView]);
+
+  useEffect(() => {
     if (!token || activeView !== VIEWS.USERS) return undefined;
     let cancelled = false;
     setUsersLoading(true);
@@ -997,13 +1062,26 @@ function App() {
       const endpoint = authMode === "signup" ? "/auth/register" : "/auth/login";
       const body =
         authMode === "signup"
-          ? { name: form.name.trim(), email: form.email.trim(), password: form.password }
+          ? {
+              firstName: form.firstName.trim(),
+              middleName: form.middleName.trim(),
+              lastName: form.lastName.trim(),
+              email: form.email.trim(),
+              password: form.password,
+            }
           : { email: form.email.trim(), password: form.password };
       const data = await apiRequest(endpoint, { method: "POST", body });
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem("quiz_token", data.token);
-      setForm({ name: "", email: "", password: "", confirmPassword: "" });
+      setForm({
+        firstName: "",
+        middleName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
       setShowAuthPassword(false);
       setShowConfirmPassword(false);
     } catch (error) {
@@ -1048,6 +1126,62 @@ function App() {
     setActiveQuiz(null);
     setResult(null);
     setSelectedQuiz(null);
+  };
+
+  const openProfileEdit = () => {
+    if (!user) return;
+    setProfileDraft({
+      firstName: user.firstName ?? "",
+      middleName: user.middleName ?? "",
+      lastName: user.lastName ?? "",
+      email: user.email || "",
+      phone: user.phone ?? "",
+      birthday: user.birthday ?? "",
+      address: user.address ?? "",
+      education: user.education ?? "",
+      gender: user.gender ?? "",
+    });
+    setProfileError("");
+    setProfileEditing(true);
+  };
+
+  const cancelProfileEdit = () => {
+    setProfileEditing(false);
+    setProfileError("");
+  };
+
+  const handleProfileSubmit = async (event) => {
+    event.preventDefault();
+    if (!token) return;
+    setProfileSaving(true);
+    setProfileError("");
+    try {
+      const data = await apiRequest("/auth/me", {
+        method: "PATCH",
+        token,
+        body: {
+          firstName: profileDraft.firstName.trim(),
+          middleName: profileDraft.middleName.trim(),
+          lastName: profileDraft.lastName.trim(),
+          email: (user?.email || "").trim(),
+          phone: profileDraft.phone.trim(),
+          birthday: profileDraft.birthday.trim() || null,
+          address: profileDraft.address.trim(),
+          education: profileDraft.education.trim(),
+          gender: profileDraft.gender.trim(),
+        },
+      });
+      setUser(data.user);
+      if (data.token) {
+        setToken(data.token);
+        localStorage.setItem("quiz_token", data.token);
+      }
+      setProfileEditing(false);
+    } catch (error) {
+      setProfileError(error.message || "Could not update profile.");
+    } finally {
+      setProfileSaving(false);
+    }
   };
 
   const handleClearHistory = async () => {
@@ -1597,20 +1731,60 @@ function App() {
 
                 <form onSubmit={handleAuth} className="space-y-5">
                 {authMode === "signup" && (
-                  <div>
-                    <label htmlFor="auth-name" className="mb-1.5 block text-sm font-medium text-neutral-700 dark:text-slate-300">
-                      Full name
-                    </label>
-                    <input
-                      id="auth-name"
-                      name="name"
-                      className="landing-input"
-                      placeholder="Jane Doe"
-                      autoComplete="name"
-                      value={form.name}
-                      onChange={(e) => setForm((prev) => ({ ...prev, name: e.target.value }))}
-                      required
-                    />
+                  <div className="flex flex-col gap-y-1">
+                    <div className="grid grid-cols-1 gap-x-2 md:grid-cols-3 md:gap-x-3">
+                      <span className="block text-sm font-semibold tracking-tight text-neutral-900 dark:text-slate-100">Name</span>
+                      <div className="hidden min-w-0 md:block" aria-hidden="true" />
+                      <div className="hidden min-w-0 md:block" aria-hidden="true" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-y-3 md:grid-cols-3 md:gap-x-3 md:gap-y-0">
+                      <div className="min-w-0">
+                        <label htmlFor="auth-first-name" className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400">
+                          First name
+                        </label>
+                        <input
+                          id="auth-first-name"
+                          name="firstName"
+                          className="landing-input"
+                          placeholder="Jane"
+                          autoComplete="given-name"
+                          value={form.firstName}
+                          onChange={(e) => setForm((prev) => ({ ...prev, firstName: e.target.value }))}
+                          required
+                          minLength={2}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label htmlFor="auth-middle-name" className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400">
+                          Middle <span className="font-normal text-neutral-500 dark:text-slate-500">(opt.)</span>
+                        </label>
+                        <input
+                          id="auth-middle-name"
+                          name="middleName"
+                          className="landing-input"
+                          placeholder="Maria"
+                          autoComplete="additional-name"
+                          value={form.middleName}
+                          onChange={(e) => setForm((prev) => ({ ...prev, middleName: e.target.value }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label htmlFor="auth-last-name" className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400">
+                          Last name
+                        </label>
+                        <input
+                          id="auth-last-name"
+                          name="lastName"
+                          className="landing-input"
+                          placeholder="Reyes"
+                          autoComplete="family-name"
+                          value={form.lastName}
+                          onChange={(e) => setForm((prev) => ({ ...prev, lastName: e.target.value }))}
+                          required
+                          minLength={2}
+                        />
+                      </div>
+                    </div>
                   </div>
                 )}
                 <div>
@@ -1838,7 +2012,7 @@ function App() {
                 aria-label="Account menu"
                 onClick={() => setAccountMenuOpen((prev) => !prev)}
               >
-                <span className="max-w-[10rem] truncate">{formatDisplayName(user?.name || "") || "Account"}</span>
+                <span className="max-w-[10rem] truncate">{getDisplayNameFromUser(user) || "Account"}</span>
                 <ChevronDownIcon className={`shrink-0 text-neutral-500 transition-transform dark:text-slate-400 ${accountMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {accountMenuOpen && (
@@ -2016,7 +2190,7 @@ function App() {
                         setHomePosts((prev) => [
                           {
                             id: `post-${Date.now()}`,
-                            author: formatDisplayName(user?.name || "You") || "You",
+                            author: getDisplayNameFromUser(user) || "You",
                             role: "Forum Member",
                             content,
                             timeLabel: "Just now",
@@ -2099,7 +2273,7 @@ function App() {
                                   ...(prev[post.id] || []),
                                   {
                                     id: `comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-                                    author: formatDisplayName(user?.name || "You") || "You",
+                                    author: getDisplayNameFromUser(user) || "You",
                                     content,
                                   },
                                 ],
@@ -2272,7 +2446,7 @@ function App() {
                             ))}
                           </div>
                           {qKind === "mcq" && (
-                            <button type="button" className="btn-secondary mt-2 w-full sm:w-auto" onClick={() => addEditOption(qIndex)}>
+                            <button type="button" className="btn-secondary mt-2 w-full md:w-auto" onClick={() => addEditOption(qIndex)}>
                               Add option
                             </button>
                           )}
@@ -2282,7 +2456,7 @@ function App() {
                   );
                 })}
               </div>
-              <button type="button" className="btn-secondary w-full sm:w-auto" onClick={addEditQuestion}>Add Question</button>
+              <button type="button" className="btn-secondary w-full md:w-auto" onClick={addEditQuestion}>Add Question</button>
               {editMessage && (
                 <p className={`text-sm font-medium ${editMessage.includes("success") ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}>
                   {editMessage}
@@ -2299,7 +2473,7 @@ function App() {
             <div className="relative space-y-4">
               <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">{selectedQuiz.title}</h2>
               <p className="text-sm text-neutral-700 dark:text-slate-300">{selectedQuiz.description || "No description provided."}</p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <div className="app-surface-muted p-3 text-sm">Category: {selectedQuiz.category}</div>
                 <div className="app-surface-muted p-3 text-sm">Questions: {selectedQuiz.questionCount}</div>
                 <div className="app-surface-muted p-3 text-sm">Estimated: {selectedQuiz.questionCount * 30}s</div>
@@ -2309,11 +2483,11 @@ function App() {
                 <input type="checkbox" checked={timedMode} onChange={(e) => setTimedMode(e.target.checked)} />
                 Timed mode
               </label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button type="button" className="btn-primary w-full sm:w-auto disabled:opacity-50" onClick={startQuiz} disabled={quizLoading || (selectedQuiz.questionCount || 0) < 1}>
+              <div className="flex flex-col gap-2 md:flex-row">
+                <button type="button" className="btn-primary w-full md:w-auto disabled:opacity-50" onClick={startQuiz} disabled={quizLoading || (selectedQuiz.questionCount || 0) < 1}>
                   {quizLoading ? "Loading..." : "Start Quiz"}
                 </button>
-                <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setActiveView(VIEWS.BROWSE)}>Back</button>
+                <button type="button" className="btn-secondary w-full md:w-auto" onClick={() => setActiveView(VIEWS.BROWSE)}>Back</button>
               </div>
             </div>
           </section>
@@ -2372,13 +2546,13 @@ function App() {
               })()}
             </div>
 
-            <div className="sticky bottom-3 rounded-2xl border border-neutral-200 bg-white/95 p-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:static sm:border-none sm:bg-transparent sm:p-0 sm:shadow-none dark:sm:bg-transparent">
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button type="button" className="btn-secondary w-full sm:w-auto" disabled={currentQuestionIndex === 0} onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}>Previous</button>
+            <div className="sticky bottom-3 rounded-2xl border border-neutral-200 bg-white/95 p-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 md:static md:border-none md:bg-transparent md:p-0 md:shadow-none dark:md:bg-transparent">
+              <div className="flex flex-col gap-2 md:flex-row">
+                <button type="button" className="btn-secondary w-full md:w-auto" disabled={currentQuestionIndex === 0} onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}>Previous</button>
                 {currentQuestionIndex < activeQuiz.questions.length - 1 ? (
-                  <button type="button" className="btn-primary w-full sm:w-auto" onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}>Next</button>
+                  <button type="button" className="btn-primary w-full md:w-auto" onClick={() => setCurrentQuestionIndex((prev) => prev + 1)}>Next</button>
                 ) : (
-                  <button type="button" className="btn-primary w-full sm:w-auto disabled:opacity-50" onClick={submitQuiz} disabled={submitLoading}>
+                  <button type="button" className="btn-primary w-full md:w-auto disabled:opacity-50" onClick={submitQuiz} disabled={submitLoading}>
                     {submitLoading ? "Submitting..." : "Submit Quiz"}
                   </button>
                 )}
@@ -2406,7 +2580,7 @@ function App() {
               <span className={`mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium ${result.scorePercent >= 80 ? "bg-brand-muted text-brand-primary" : result.scorePercent >= 60 ? "bg-brand-soft text-brand-primary" : "bg-neutral-100 text-neutral-600 dark:bg-slate-800 dark:text-slate-300"}`}>
                 {result.scorePercent >= 80 ? "Excellent" : result.scorePercent >= 60 ? "Good" : "Try Again"}
               </span>
-              <div className="mt-4 grid grid-cols-3 gap-2 text-sm">
+              <div className="mt-4 grid grid-cols-1 gap-2 text-sm md:grid-cols-3">
                 <div className="app-surface-muted p-3">Correct: {result.correctCount}</div>
                 <div className="app-surface-muted p-3">Wrong: {result.totalQuestions - result.correctCount}</div>
                 <div className="app-surface-muted p-3">Total: {result.totalQuestions}</div>
@@ -2419,9 +2593,9 @@ function App() {
                 </div>
               ))}
             </article>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <button type="button" className="btn-primary w-full sm:w-auto" onClick={() => setActiveView(VIEWS.BROWSE)}>Take Similar Quiz</button>
-              <button type="button" className="btn-secondary w-full sm:w-auto" onClick={() => setActiveView(VIEWS.DASHBOARD)}>Back to Home</button>
+            <div className="flex flex-col gap-2 md:flex-row">
+              <button type="button" className="btn-primary w-full md:w-auto" onClick={() => setActiveView(VIEWS.BROWSE)}>Take Similar Quiz</button>
+              <button type="button" className="btn-secondary w-full md:w-auto" onClick={() => setActiveView(VIEWS.DASHBOARD)}>Back to Home</button>
             </div>
           </section>
         )}
@@ -2463,20 +2637,243 @@ function App() {
 
         {activeView === VIEWS.PROFILE && (
           <section className="app-card space-y-4 md:space-y-6">
-            <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Profile</h2>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <h2 className="text-2xl font-semibold text-neutral-900 dark:text-slate-100">Profile</h2>
+              {user && !profileEditing ? (
+                <button type="button" className="btn-secondary shrink-0" onClick={openProfileEdit}>
+                  Edit profile
+                </button>
+              ) : null}
+            </div>
             {user ? (
-              <div className="space-y-4">
-                <div className="flex flex-wrap items-center gap-4">
-                  <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-xl font-bold text-brand-primary ring-1 ring-brand-border">
-                    {(formatDisplayName(user.name) || "?").charAt(0)}
+              profileEditing ? (
+                <form onSubmit={handleProfileSubmit} className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-xl font-bold text-brand-primary ring-1 ring-brand-border">
+                      {(getDisplayNameFromUser(profileDraft) || user.email || "?").charAt(0)}
+                    </div>
+                    <p className="text-sm text-neutral-600 dark:text-slate-400">Update your name.</p>
+                  </div>
+                  <div className="flex flex-col gap-y-1">
+                    <div className="grid grid-cols-1 gap-x-3 md:grid-cols-3 md:gap-x-4">
+                      <span className="block text-sm font-semibold tracking-tight text-neutral-900 dark:text-slate-100">Name</span>
+                      <div className="hidden min-w-0 md:block" aria-hidden="true" />
+                      <div className="hidden min-w-0 md:block" aria-hidden="true" />
+                    </div>
+                    <div className="grid grid-cols-1 gap-y-3 md:grid-cols-3 md:gap-x-4 md:gap-y-0">
+                      <div className="min-w-0">
+                        <label
+                          className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400"
+                          htmlFor="profile-first-name"
+                        >
+                          First name
+                        </label>
+                        <input
+                          id="profile-first-name"
+                          name="firstName"
+                          className="input-base mt-1"
+                          autoComplete="given-name"
+                          value={profileDraft.firstName}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, firstName: e.target.value }))}
+                          required
+                          minLength={2}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400"
+                          htmlFor="profile-middle-name"
+                        >
+                          Middle <span className="font-normal text-neutral-500 dark:text-slate-500">(optional)</span>
+                        </label>
+                        <input
+                          id="profile-middle-name"
+                          name="middleName"
+                          className="input-base mt-1"
+                          autoComplete="additional-name"
+                          value={profileDraft.middleName}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, middleName: e.target.value }))}
+                        />
+                      </div>
+                      <div className="min-w-0">
+                        <label
+                          className="mb-1.5 block text-xs font-medium text-neutral-600 dark:text-slate-400"
+                          htmlFor="profile-last-name"
+                        >
+                          Last name
+                        </label>
+                        <input
+                          id="profile-last-name"
+                          name="lastName"
+                          className="input-base mt-1"
+                          autoComplete="family-name"
+                          value={profileDraft.lastName}
+                          onChange={(e) => setProfileDraft((prev) => ({ ...prev, lastName: e.target.value }))}
+                          required
+                          minLength={2}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <div>
-                    <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{formatDisplayName(user.name)}</p>
-                    <p className="text-sm text-neutral-600 dark:text-slate-400">{user.email}</p>
+                    <label className="label-base" htmlFor="profile-email">
+                      Email
+                    </label>
+                    <input
+                      id="profile-email"
+                      name="email"
+                      type="email"
+                      readOnly
+                      aria-readonly="true"
+                      className="input-base mt-1 cursor-default read-only:border-neutral-200 read-only:bg-neutral-50 read-only:text-neutral-700 dark:read-only:border-slate-600 dark:read-only:bg-slate-900/50 dark:read-only:text-slate-300"
+                      autoComplete="email"
+                      value={profileDraft.email}
+                    />
                   </div>
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-8 md:gap-x-4">
+                    <div className="min-w-0 md:col-span-2">
+                      <label className="label-base" htmlFor="profile-gender">
+                        Gender
+                      </label>
+                      <select
+                        id="profile-gender"
+                        name="gender"
+                        className="input-base mt-1"
+                        value={profileDraft.gender}
+                        onChange={(e) => setProfileDraft((prev) => ({ ...prev, gender: e.target.value }))}
+                      >
+                        <option value="">Not specified</option>
+                        {PROFILE_GENDER_OPTIONS.map(([value, label]) => (
+                          <option key={value} value={value}>
+                            {label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="min-w-0 md:col-span-2">
+                      <label className="label-base" htmlFor="profile-birthday">
+                        Birthday
+                      </label>
+                      <input
+                        id="profile-birthday"
+                        name="birthday"
+                        type="date"
+                        className="input-base mt-1"
+                        value={profileDraft.birthday}
+                        onChange={(e) => setProfileDraft((prev) => ({ ...prev, birthday: e.target.value }))}
+                      />
+                    </div>
+                    <div className="min-w-0 md:col-span-4">
+                      <label className="label-base" htmlFor="profile-phone">
+                        Phone number
+                      </label>
+                      <input
+                        id="profile-phone"
+                        name="phone"
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
+                        className="input-base mt-1"
+                        value={profileDraft.phone}
+                        onChange={(e) => setProfileDraft((prev) => ({ ...prev, phone: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label-base" htmlFor="profile-address">
+                      Address
+                    </label>
+                    <textarea
+                      id="profile-address"
+                      name="address"
+                      rows={3}
+                      autoComplete="street-address"
+                      className="input-base mt-1 min-h-[5rem] resize-y"
+                      value={profileDraft.address}
+                      onChange={(e) => setProfileDraft((prev) => ({ ...prev, address: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <label className="label-base" htmlFor="profile-education">
+                      Education
+                    </label>
+                    <input
+                      id="profile-education"
+                      name="education"
+                      type="text"
+                      autoComplete="off"
+                      className="input-base mt-1"
+                      placeholder="e.g. BS Computer Science"
+                      value={profileDraft.education}
+                      onChange={(e) => setProfileDraft((prev) => ({ ...prev, education: e.target.value }))}
+                    />
+                  </div>
+                  {profileError ? (
+                    <p className="app-alert-danger-text text-sm" role="alert">
+                      {profileError}
+                    </p>
+                  ) : null}
+                  <div className="flex flex-wrap gap-2">
+                    <button type="submit" className="btn-primary min-w-[7rem]" disabled={profileSaving}>
+                      {profileSaving ? "Saving…" : "Save changes"}
+                    </button>
+                    <button type="button" className="btn-secondary min-w-[7rem]" disabled={profileSaving} onClick={cancelProfileEdit}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex flex-wrap items-center gap-4">
+                    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-xl font-bold text-brand-primary ring-1 ring-brand-border">
+                      {(getDisplayNameFromUser(user) || "?").charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-neutral-900 dark:text-slate-100">{getDisplayNameFromUser(user)}</p>
+                      <p className="text-sm text-neutral-600 dark:text-slate-400">{user.email}</p>
+                    </div>
+                  </div>
+                  {(user.phone ||
+                    user.birthday ||
+                    user.address ||
+                    user.education ||
+                    user.gender) && (
+                    <dl className="grid max-w-lg gap-x-6 gap-y-2 text-sm md:grid-cols-[8rem_1fr]">
+                      {user.phone ? (
+                        <>
+                          <dt className="text-neutral-500 dark:text-slate-400">Phone</dt>
+                          <dd className="text-neutral-900 dark:text-slate-100">{user.phone}</dd>
+                        </>
+                      ) : null}
+                      {user.birthday ? (
+                        <>
+                          <dt className="text-neutral-500 dark:text-slate-400">Birthday</dt>
+                          <dd className="text-neutral-900 dark:text-slate-100">{formatBirthdayDisplay(user.birthday)}</dd>
+                        </>
+                      ) : null}
+                      {user.address ? (
+                        <>
+                          <dt className="text-neutral-500 dark:text-slate-400">Address</dt>
+                          <dd className="whitespace-pre-wrap text-neutral-900 dark:text-slate-100">{user.address}</dd>
+                        </>
+                      ) : null}
+                      {user.education ? (
+                        <>
+                          <dt className="text-neutral-500 dark:text-slate-400">Education</dt>
+                          <dd className="text-neutral-900 dark:text-slate-100">{user.education}</dd>
+                        </>
+                      ) : null}
+                      {user.gender ? (
+                        <>
+                          <dt className="text-neutral-500 dark:text-slate-400">Gender</dt>
+                          <dd className="text-neutral-900 dark:text-slate-100">{formatGenderDisplay(user.gender)}</dd>
+                        </>
+                      ) : null}
+                    </dl>
+                  )}
+                  <p className="text-xs text-neutral-500 dark:text-slate-400">Details refresh from the server when you open this page.</p>
                 </div>
-                <p className="text-xs text-neutral-500 dark:text-slate-400">Details refresh from the server when you open this page.</p>
-              </div>
+              )
             ) : (
               <p className="app-alert-danger-text text-sm">Could not load your profile. Try signing in again.</p>
             )}
@@ -2550,8 +2947,8 @@ function App() {
                   <p className="mt-1 text-sm font-semibold text-violet-950 dark:text-slate-100">Quiz generator</p>
                   <p className="mt-1 text-xs text-violet-700/90 dark:text-violet-200/90">Switch to Gemini to auto-create questions from your topic.</p>
                 </div>
-                <div className="mt-2 grid gap-3 sm:grid-cols-3 sm:items-start">
-                  <div className="sm:col-span-1">
+                <div className="mt-2 grid gap-3 md:grid-cols-3 md:items-start">
+                  <div className="md:col-span-1">
                     <label className="label-base text-violet-900 dark:text-violet-200">Provider</label>
                     <div className="relative mt-1">
                       <select
@@ -2574,7 +2971,7 @@ function App() {
                     aria-hidden={createState.generatorProvider !== "gemini"}
                   >
                     <div
-                      className={`sm:col-span-1 overflow-hidden transition-all duration-300 ease-out ${
+                      className={`md:col-span-1 overflow-hidden transition-all duration-300 ease-out ${
                         createState.generatorProvider === "gemini" ? "max-h-40 translate-y-0" : "max-h-0 -translate-y-1"
                       }`}
                     >
@@ -2594,7 +2991,7 @@ function App() {
                       />
                     </div>
                     <div
-                      className={`sm:col-span-1 sm:self-end overflow-hidden transition-all duration-300 ease-out ${
+                      className={`md:col-span-1 md:self-end overflow-hidden transition-all duration-300 ease-out ${
                         createState.generatorProvider === "gemini" ? "max-h-40 translate-y-0" : "max-h-0 -translate-y-1"
                       }`}
                     >
@@ -2697,7 +3094,7 @@ function App() {
                           ))}
                         </div>
                         {qKind === "mcq" && (
-                          <button type="button" className="btn-secondary mt-2 w-full sm:w-auto" onClick={() => addQuestionOption(qIndex)}>
+                          <button type="button" className="btn-secondary mt-2 w-full md:w-auto" onClick={() => addQuestionOption(qIndex)}>
                             Add option
                           </button>
                         )}
@@ -2707,7 +3104,7 @@ function App() {
                   );
                 })}
               </div>
-              <button type="button" className="btn-secondary w-full sm:w-auto" onClick={addQuestion}>Add Question</button>
+              <button type="button" className="btn-secondary w-full md:w-auto" onClick={addQuestion}>Add Question</button>
               {createMessage && (
                 <p
                   className={`text-sm font-medium ${createMessage.includes("success") ? "text-emerald-700 dark:text-emerald-300" : "text-rose-700 dark:text-rose-300"}`}
