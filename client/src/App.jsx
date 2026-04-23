@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import qaLogo from "./assets/QA-logo.png";
+import examLogo from "./assets/exam-logo.png";
+import cscLogo from "./assets/csc-logo.png";
+import prcLogo from "./assets/prc-logo.png";
+import heroStudyImage from "./assets/hero.png";
 import websiteLeadersImage from "./assets/website-leaders.png";
 
 /**
@@ -240,16 +244,55 @@ const defaultHomePosts = [
   },
 ];
 
+const LANDING_TARGET_EXAMS = [
+  {
+    badge: "CSC",
+    logo: cscLogo,
+    title: "Civil Service Examinations",
+    description:
+      "Prepare for Civil Service Commission eligibility tests used for careers across Philippine government agencies.",
+  },
+  {
+    badge: "PRC",
+    logo: prcLogo,
+    title: "Professional Regulation Commission",
+    description: "Board exams and professional licensure aligned with your field and regulatory requirements.",
+  },
+  {
+    badge: "UCE",
+    title: "University Entrance Exams",
+    description: "Practice and readiness for college admissions and campus-specific screening assessments.",
+  },
+  {
+    badge: "Bar",
+    title: "Philippine Bar Examination",
+    description: "Structured preparation focus for the Supreme Court bar and legal practice readiness.",
+  },
+  {
+    badge: "NAT",
+    title: "National Achievement Test",
+    description: "National Assessment milestones for basic education outcomes and institutional benchmarks.",
+  },
+  {
+    badge: "LET",
+    title: "Licensure Exam for Teachers",
+    description: "LET coverage for classroom practice, pedagogy, and professional teaching standards.",
+  },
+];
+
+const LANDING_EXAM_SLIDE_SIZE = 3;
+const LANDING_EXAM_SLIDES = Array.from({ length: Math.ceil(LANDING_TARGET_EXAMS.length / LANDING_EXAM_SLIDE_SIZE) }, (_, i) =>
+  LANDING_TARGET_EXAMS.slice(i * LANDING_EXAM_SLIDE_SIZE, i * LANDING_EXAM_SLIDE_SIZE + LANDING_EXAM_SLIDE_SIZE),
+);
+
 function LandingIllustration() {
   return (
     <img src={websiteLeadersImage} alt="Exam community leaders" className="h-auto w-full max-w-xl drop-shadow-2xl" />
   );
 }
 
-function QuizAppLogo({ className = "h-9 w-9" }) {
-  return (
-    <img src={qaLogo} alt="Quiz App logo" className={`rounded-xl object-cover shadow-sm ${className}`} />
-  );
+function QuizAppLogo({ className = "h-7 w-auto max-w-[11rem] shrink-0 object-contain sm:h-8 sm:max-w-[13rem]" }) {
+  return <img src={examLogo} alt="exam logo" className={className} />;
 }
 
 function EyeShowPasswordIcon(props) {
@@ -274,6 +317,113 @@ function ChevronDownIcon(props) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
       <path d="M6 9l6 6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronLeftIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M15 18l-6-6 6-6" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M9 18l6-6-6-6" />
+    </svg>
+  );
+}
+
+function LandingFeatureIconDiscussion(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" />
+    </svg>
+  );
+}
+
+function LandingFeatureIconExchange(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M4 19.5A2.5 2.5 0 016.5 17H20" />
+      <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z" />
+      <path d="M8 7h8M8 11h6" />
+    </svg>
+  );
+}
+
+function LandingFeatureIconBuddy(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+    </svg>
+  );
+}
+
+function LandingFeatureRow({ Icon, eyebrow, title, body }) {
+  return (
+    <div className="flex gap-4 sm:gap-5">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-teal-50 text-brand-accent shadow-sm dark:bg-slate-800 dark:text-brand-accent">
+        <Icon className="h-5 w-5" />
+      </div>
+      <div className="min-w-0">
+        <p className="text-xs font-semibold uppercase tracking-wide text-brand-accent">{eyebrow}</p>
+        <h3 className="mt-1 text-base font-bold leading-snug text-neutral-900 dark:text-slate-100 sm:text-lg">{title}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-neutral-600 dark:text-slate-400">{body}</p>
+      </div>
+    </div>
+  );
+}
+
+const LANDING_FEATURE_ROWS = [
+  {
+    Icon: LandingFeatureIconDiscussion,
+    eyebrow: "Guided Discussions",
+    title: "Clarify difficult topics faster",
+    body: "Discuss confusing concepts with fellow reviewees and learn from practical explanations.",
+  },
+  {
+    Icon: LandingFeatureIconExchange,
+    eyebrow: "Resource Exchange",
+    title: "Get quality reviewers and drills",
+    body: "Access community-shared notes, flashcards, and mock tests by exam category.",
+  },
+  {
+    Icon: LandingFeatureIconBuddy,
+    eyebrow: "Study Buddy Matching",
+    title: "Stay consistent until exam day",
+    body: "Pair up with exam buddies for daily check-ins, goal tracking, and motivation.",
+  },
+];
+
+function MenuIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={22} height={22} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" aria-hidden {...props}>
+      <line x1="4" x2="20" y1="7" y2="7" />
+      <line x1="4" x2="20" y1="12" y2="12" />
+      <line x1="4" x2="20" y1="17" y2="17" />
+    </svg>
+  );
+}
+
+function SunIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
+    </svg>
+  );
+}
+
+function MoonIcon(props) {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden {...props}>
+      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
     </svg>
   );
 }
@@ -305,12 +455,12 @@ function CategoryDropdown({ value, onChange, categories, placeholder = "Pick or 
         <ChevronDownIcon className={`transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
       {open && options.length > 0 && (
-        <div className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-neutral-200 bg-white p-1 shadow-lg">
+        <div className="absolute z-20 mt-1 max-h-56 w-full overflow-auto rounded-xl border border-neutral-200 bg-white p-1 shadow-lg dark:border-slate-600 dark:bg-slate-900">
           {options.map((category) => (
             <button
               key={category}
               type="button"
-              className="w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100"
+              className="w-full rounded-lg px-3 py-2 text-left text-sm text-neutral-700 hover:bg-neutral-100 dark:text-slate-300 dark:hover:bg-slate-800"
               onMouseDown={(e) => {
                 e.preventDefault();
                 onChange(category);
@@ -339,6 +489,10 @@ function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef(null);
+  const [theme, setTheme] = useState(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark") ? "dark" : "light",
+  );
+  const [landingExamSlide, setLandingExamSlide] = useState(0);
   const [usersList, setUsersList] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
   const [usersError, setUsersError] = useState("");
@@ -396,6 +550,12 @@ function App() {
   const [commentDraftByPost, setCommentDraftByPost] = useState({});
 
   const googleBtnRef = useRef(null);
+
+  useEffect(() => {
+    if (theme === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
+    localStorage.setItem("quiz_theme", theme);
+  }, [theme]);
 
   useEffect(() => {
     const ensureIconLink = (selector, rel) => {
@@ -1046,7 +1206,11 @@ function App() {
         setActiveView(id);
         setMobileMenuOpen(false);
       }}
-      className={`w-full rounded-xl px-3 py-2 text-center text-sm md:w-auto md:min-w-[6.75rem] md:shrink-0 ${activeView === id ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"}`}
+      className={`w-full rounded-xl px-3 py-2.5 text-center text-sm font-medium transition-colors md:w-auto md:min-w-[5.5rem] md:shrink-0 md:rounded-full md:px-4 md:py-2 ${
+        activeView === id
+          ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border md:bg-white md:font-semibold md:text-brand-primary md:shadow-sm md:ring-0 md:dark:bg-slate-800 md:dark:text-slate-100 md:dark:shadow-md"
+          : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 md:hover:bg-white/85 md:hover:text-neutral-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100 md:dark:hover:bg-slate-800/80"
+      }`}
     >
       {label}
     </button>
@@ -1056,12 +1220,11 @@ function App() {
     return (
       <div className="landing-shell">
         <header className="landing-nav">
-          <div className="app-container flex h-16 items-center justify-between gap-3">
-            <div className="flex min-w-0 items-center gap-2.5">
-              <QuizAppLogo className="h-9 w-9 shrink-0" />
-              <span className="truncate text-lg font-semibold tracking-tight text-neutral-900">Quiz App</span>
+          <div className="app-container flex h-[4.25rem] items-center justify-between gap-4 px-6 sm:px-8 lg:px-10">
+            <div className="flex min-w-0 items-center">
+              <QuizAppLogo />
             </div>
-            <nav className="flex shrink-0 items-center gap-2 sm:gap-3" aria-label="Sign in">
+            <nav className="flex shrink-0 items-center gap-3 sm:gap-4" aria-label="Sign in">
               <button type="button" className="landing-btn-nav-text" onClick={() => openAuthPanel("login")}>
                 Log in
               </button>
@@ -1072,126 +1235,189 @@ function App() {
           </div>
         </header>
 
-        <main className="app-container pb-20 pt-10 md:pb-28 md:pt-14">
-          <div className="grid gap-12 lg:grid-cols-[1.3fr_0.7fr] lg:items-center lg:gap-14">
-            <section className="space-y-6">
-              <p className="inline-flex rounded-full border border-neutral-200 bg-white px-3 py-1 text-xs font-medium text-neutral-600 shadow-sm">
-                Philippines Exam Community
-              </p>
-              <h1 className="text-4xl font-extrabold leading-[1.08] tracking-tight text-neutral-900 sm:text-5xl sm:leading-[1.05]">
-                A learning forum for <span className="text-brand-primary">Filipino exam takers</span>
-              </h1>
-              <p className="text-lg leading-relaxed text-neutral-600">
-                Exchange knowledge, share reviewers, and test your readiness before Civil Service, PRC, Bar, NAPOLCOM, and other Philippine exams.
-              </p>
-              <div className="grid gap-2 text-sm text-neutral-700 sm:grid-cols-2">
-                {["Topic-based discussion threads", "Peer-reviewed practice questions", "Study buddy accountability groups", "Weekly mock quiz events"].map((point) => (
-                  <p key={point} className="rounded-xl border border-neutral-200 bg-white px-3 py-2 shadow-sm">
-                    {point}
+        <main>
+          <div className="landing-hero-band">
+            <div className="app-container px-6 sm:px-8 lg:px-12">
+              <div className="relative mx-auto w-full max-w-6xl">
+                <section className="relative grid min-h-[calc(100svh-5.5rem)] grid-cols-1 items-start gap-10 pb-28 pt-[200px] sm:min-h-[calc(100svh-4.25rem)] sm:gap-12 sm:pb-32 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-x-12 lg:gap-y-8 lg:pb-36 xl:gap-x-16">
+              <div className="flex max-w-xl flex-col items-center gap-7 text-center sm:gap-8 lg:max-w-none lg:items-start lg:text-left">
+                <div className="flex w-full flex-col gap-5 sm:gap-6">
+                  <h1 className="text-balance text-[2rem] font-extrabold leading-[1.12] tracking-tight text-neutral-900 sm:text-5xl sm:leading-[1.08] dark:text-slate-50">
+                    A learning forum for <span className="text-brand-primary dark:text-brand-accent">Filipino exam takers</span>
+                  </h1>
+                  <p className="mx-auto max-w-xl text-pretty text-lg leading-relaxed text-neutral-600 dark:text-slate-400 md:text-xl md:leading-relaxed lg:mx-0">
+                    Exchange knowledge, share reviewers, and test your readiness before Philippine licensure and career exams.
                   </p>
-                ))}
-              </div>
-              <div className="flex flex-wrap items-center gap-3 pt-1">
-                <button type="button" className="landing-hero-cta" onClick={() => openAuthPanel("signup")}>
-                  Join Exam Forum
-                </button>
-                <button type="button" className="btn-secondary rounded-full px-6" onClick={() => openAuthPanel("login")}>
-                  Continue learning
-                </button>
-              </div>
-              <div className="grid grid-cols-1 gap-2 pt-2 text-sm text-neutral-700 sm:grid-cols-3">
-                <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
-                  <span className="block text-lg font-bold text-neutral-900">12k+</span>
-                  Forum posts
                 </div>
-                <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
-                  <span className="block text-lg font-bold text-neutral-900">250+</span>
-                  Mock quizzes
+                <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 lg:justify-start">
+                  <button type="button" className="landing-hero-cta px-10" onClick={() => openAuthPanel("signup")}>
+                    Join Exam Forum
+                  </button>
+                  <button type="button" className="btn-secondary rounded-full px-8 py-3 text-sm" onClick={() => openAuthPanel("login")}>
+                    Continue learning
+                  </button>
                 </div>
-                <div className="rounded-xl border border-neutral-200 bg-white px-3 py-2 text-center">
-                  <span className="block text-lg font-bold text-neutral-900">24/7</span>
-                  Peer support
+                <div className="flex w-full max-w-md flex-wrap justify-center gap-x-10 gap-y-8 border-t border-neutral-200/80 pt-9 dark:border-slate-700/80 sm:max-w-lg sm:gap-x-12 lg:max-w-none lg:justify-start">
+                  <div className="min-w-[5.5rem] text-center lg:text-left">
+                    <span className="block text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">12k+</span>
+                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-500">Forum posts</span>
+                  </div>
+                  <div className="min-w-[5.5rem] text-center lg:text-left">
+                    <span className="block text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">250+</span>
+                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-500">Mock quizzes</span>
+                  </div>
+                  <div className="min-w-[5.5rem] text-center lg:text-left">
+                    <span className="block text-2xl font-semibold tracking-tight text-neutral-900 dark:text-slate-100">24/7</span>
+                    <span className="mt-1 block text-sm text-neutral-500 dark:text-slate-500">Peer support</span>
+                  </div>
                 </div>
               </div>
-            </section>
-            <div className="flex justify-center lg:justify-end">
-              <LandingIllustration />
+              <div className="flex justify-center lg:justify-end lg:self-start">
+                <div className="w-full max-w-md sm:max-w-lg lg:max-w-xl xl:max-w-2xl">
+                  <LandingIllustration />
+                </div>
+              </div>
+              <button
+                type="button"
+                className="absolute bottom-6 left-1/2 z-10 flex h-11 w-11 -translate-x-1/2 items-center justify-center rounded-full border border-neutral-200/90 bg-white/95 text-neutral-600 shadow-md backdrop-blur-sm transition hover:border-neutral-300 hover:bg-white hover:text-neutral-900 dark:border-slate-600 dark:bg-slate-900/95 dark:text-slate-300 dark:hover:border-slate-500 dark:hover:bg-slate-800 dark:hover:text-white sm:bottom-8"
+                aria-label="Scroll to content below"
+                onClick={() => document.getElementById("landing-next-section")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              >
+                <ChevronDownIcon className="h-5 w-5" />
+              </button>
+                </section>
+              </div>
             </div>
           </div>
 
-          <section className="mt-10 rounded-2xl border border-neutral-200 bg-white p-4 shadow-sm md:mt-14 md:p-6">
-            <p className="text-center text-xs font-semibold uppercase tracking-wide text-neutral-500">Choose your target exam</p>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-center text-sm sm:grid-cols-4">
-              {["Civil Service", "PRC Licensure", "Bar Exam", "NAPOLCOM & DEPED"].map((group) => (
-                <div key={group} className="rounded-xl border border-neutral-200 bg-neutral-50 px-3 py-3 font-medium text-neutral-700">
-                  {group}
-                </div>
-              ))}
+          <div className="app-container px-6 pb-24 pt-12 sm:px-8 md:pb-32 md:pt-14 lg:px-12">
+          <section
+            id="landing-next-section"
+            className="scroll-mt-24 px-4 py-10 sm:scroll-mt-28 sm:px-8 md:px-10 md:py-12"
+          >
+            <p className="mx-auto max-w-3xl text-center text-lg font-semibold leading-snug tracking-tight text-neutral-900 dark:text-slate-100 sm:text-xl">
+              All the exams you need to prepare for in one place
+            </p>
+            <div className="relative mt-10">
+              <button
+                type="button"
+                className="absolute left-0 top-[42%] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-500 shadow-sm transition hover:border-neutral-300 hover:text-neutral-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 sm:left-1 md:left-2"
+                aria-label="Previous exams"
+                onClick={() =>
+                  setLandingExamSlide((s) => (s - 1 + LANDING_EXAM_SLIDES.length) % LANDING_EXAM_SLIDES.length)
+                }
+              >
+                <ChevronLeftIcon className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-0 top-[42%] z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-500 shadow-sm transition hover:border-neutral-300 hover:text-neutral-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-400 dark:hover:border-slate-500 sm:right-1 md:right-2"
+                aria-label="Next exams"
+                onClick={() => setLandingExamSlide((s) => (s + 1) % LANDING_EXAM_SLIDES.length)}
+              >
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+              <div className="mx-auto grid w-full max-w-5xl grid-cols-1 justify-items-center gap-12 px-4 sm:grid-cols-3 sm:gap-x-8 sm:gap-y-0 md:gap-x-12 md:px-6">
+                {LANDING_EXAM_SLIDES[landingExamSlide].map((exam) => (
+                  <div key={exam.title} className="flex w-full max-w-[20rem] flex-col items-center gap-3 text-center sm:max-w-none">
+                    {exam.logo ? (
+                      <div className="flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center overflow-hidden rounded-2xl p-2">
+                        <img src={exam.logo} alt={`${exam.title} logo`} className="max-h-full max-w-full object-contain" />
+                      </div>
+                    ) : (
+                      <div className="flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-2xl bg-brand-soft text-sm font-bold tracking-tight text-brand-primary shadow-sm dark:bg-slate-800 dark:text-brand-accent sm:text-base">
+                        {exam.badge}
+                      </div>
+                    )}
+                    <h3 className="px-1 text-[15px] font-semibold leading-snug text-brand-accent sm:text-base md:whitespace-nowrap md:text-lg">{exam.title}</h3>
+                    <p className="text-pretty text-sm leading-relaxed text-neutral-600 dark:text-slate-400">{exam.description}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-10 flex justify-center gap-2.5">
+                {LANDING_EXAM_SLIDES.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`h-2 w-2 rounded-full transition ${i === landingExamSlide ? "bg-neutral-700 dark:bg-slate-200" : "bg-neutral-300 dark:bg-slate-600"}`}
+                    aria-label={`Exam slide ${i + 1}`}
+                    aria-current={i === landingExamSlide}
+                    onClick={() => setLandingExamSlide(i)}
+                  />
+                ))}
+              </div>
             </div>
           </section>
 
-          <section className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <article className="app-card">
-              <p className="text-sm font-semibold text-brand-primary">Guided Discussions</p>
-              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Clarify difficult topics faster</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Discuss confusing concepts with fellow reviewees and learn from practical explanations.</p>
-            </article>
-            <article className="app-card">
-              <p className="text-sm font-semibold text-brand-primary">Resource Exchange</p>
-              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Get quality reviewers and drills</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Access community-shared notes, flashcards, and mock tests by exam category.</p>
-            </article>
-            <article className="app-card sm:col-span-2 lg:col-span-1">
-              <p className="text-sm font-semibold text-brand-primary">Study Buddy Matching</p>
-              <h3 className="mt-1 text-lg font-semibold text-neutral-900">Stay consistent until exam day</h3>
-              <p className="mt-2 text-sm leading-relaxed text-neutral-600">Pair up with exam buddies for daily check-ins, goal tracking, and motivation.</p>
-            </article>
+          <section className="mt-16 lg:mt-24">
+            <h2 className="mx-auto max-w-3xl text-center text-2xl font-bold tracking-tight text-neutral-900 dark:text-slate-100 md:text-3xl">
+              The best way to prepare for Philippine exams
+            </h2>
+            <div className="mt-12 grid grid-cols-1 gap-12 lg:mt-14 lg:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] lg:items-center lg:gap-8 xl:gap-14">
+              <div className="order-2 flex max-w-lg flex-col gap-12 justify-self-center lg:order-1 lg:justify-self-end">
+                <LandingFeatureRow {...LANDING_FEATURE_ROWS[0]} />
+                <LandingFeatureRow {...LANDING_FEATURE_ROWS[1]} />
+              </div>
+              <div className="order-1 flex justify-center px-4 lg:order-2 lg:px-2">
+                <img
+                  src={heroStudyImage}
+                  alt="Student preparing for exams"
+                  className="h-auto w-full max-w-[280px] object-contain drop-shadow-lg md:max-w-[320px] lg:max-w-[340px]"
+                />
+              </div>
+              <div className="order-3 flex max-w-lg flex-col gap-12 justify-self-center lg:justify-self-start">
+                <LandingFeatureRow {...LANDING_FEATURE_ROWS[2]} />
+              </div>
+            </div>
           </section>
 
-          <section className="mt-8 rounded-2xl border border-brand-border bg-brand-soft/40 p-6 text-center md:mt-10">
-            <h2 className="text-2xl font-bold tracking-tight text-neutral-900">Start your review journey with people who get it</h2>
-            <p className="mt-2 text-sm text-neutral-700">Build confidence, sharpen your weak areas, and prepare smarter with a supportive exam community.</p>
-            <div className="mt-4 flex flex-col justify-center gap-3 sm:flex-row">
-              <button type="button" className="landing-hero-cta" onClick={() => openAuthPanel("signup")}>
+          <section className="mt-16 border-t border-neutral-200/90 pt-16 text-center dark:border-slate-700 md:mt-24 md:pt-20">
+            <h2 className="mx-auto max-w-2xl text-2xl font-bold tracking-tight text-neutral-900 dark:text-slate-100 md:text-3xl">Start your review journey with people who get it</h2>
+            <p className="mx-auto mt-5 max-w-lg text-base leading-relaxed text-neutral-600 dark:text-slate-400 md:mt-6">
+              Build confidence, sharpen your weak areas, and prepare smarter with a supportive exam community.
+            </p>
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-5">
+              <button type="button" className="landing-hero-cta min-w-[12rem] px-10" onClick={() => openAuthPanel("signup")}>
                 Create free account
               </button>
-              <button type="button" className="btn-secondary rounded-full px-6" onClick={() => openAuthPanel("login")}>
+              <button type="button" className="btn-secondary min-w-[12rem] rounded-full px-8 py-3 text-sm" onClick={() => openAuthPanel("login")}>
                 Log in
               </button>
             </div>
           </section>
+          </div>
         </main>
 
         {authPanelVisible && (
           <div
-            className="landing-auth-modal-root fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+            className="landing-auth-modal-root fixed inset-0 z-[100] flex items-center justify-center p-6 sm:p-10"
             role="dialog"
             aria-modal="true"
             aria-labelledby="auth-modal-title"
           >
             <button
               type="button"
-              className="landing-auth-modal-backdrop absolute inset-0 bg-neutral-900/40 backdrop-blur-[2px]"
+              className="landing-auth-modal-backdrop absolute inset-0 bg-neutral-900/45 backdrop-blur-[3px] dark:bg-black/55"
               aria-label="Close sign-in dialog"
               onClick={closeAuthPanel}
             />
-            <div className="landing-auth-panel relative z-10 w-full max-w-md" onClick={(event) => event.stopPropagation()}>
+            <div className="landing-auth-panel relative z-10 w-full max-w-[26rem]" onClick={(event) => event.stopPropagation()}>
               <div className="landing-card relative">
                 <button type="button" className="landing-auth-close" onClick={closeAuthPanel} aria-label="Close">
                   <span aria-hidden="true">×</span>
                 </button>
-                <div className="mb-6 pr-10">
-                  <h2 id="auth-modal-title" className="text-2xl font-bold tracking-tight text-neutral-900">
+                <div className="mb-8 pr-10">
+                  <h2 id="auth-modal-title" className="text-2xl font-bold tracking-tight text-neutral-900 dark:text-slate-100 md:text-[1.65rem]">
                     {authMode === "signup" ? "Create an account" : "Welcome back"}
                   </h2>
-                  <p className="mt-2 text-sm leading-relaxed text-neutral-600">
+                  <p className="mt-4 max-w-md text-sm leading-relaxed text-neutral-600 dark:text-slate-400 md:text-[15px] md:leading-relaxed">
                     {authMode === "signup"
                       ? "Create your account to join exam-focused groups and start your review plan."
                       : "Sign in with email or Google to continue your forum and review progress."}
                   </p>
                 </div>
 
-                <form onSubmit={handleAuth} className="space-y-4">
+                <form onSubmit={handleAuth} className="space-y-5">
                 {authMode === "signup" && (
                   <div>
                     <label htmlFor="auth-name" className="mb-1.5 block text-sm font-medium text-neutral-700">
@@ -1322,7 +1548,7 @@ function App() {
                   )}
                 </div>
 
-                <p className="mt-8 text-center text-sm text-neutral-600">
+                <p className="mt-8 text-center text-sm text-neutral-600 dark:text-slate-400">
                   {authMode === "signup" ? (
                     <>
                       Already have an account?{" "}
@@ -1367,52 +1593,50 @@ function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white/95 backdrop-blur">
-        <div className="app-container flex h-16 items-center justify-between">
+    <div className="min-h-screen bg-app dark:bg-slate-950">
+      <header className="sticky top-0 z-50 border-b border-neutral-200/80 bg-white/90 shadow-[0_1px_0_rgba(15,23,42,0.04)] backdrop-blur-md dark:border-slate-700/80 dark:bg-slate-900/95">
+        <div className="app-container flex h-[4.25rem] items-center justify-between gap-3">
           <button
             type="button"
-            className="flex items-center gap-3 rounded-xl px-1 py-1 text-left focus:outline-none"
+            className="rounded-xl px-1 py-1 focus:outline-none"
             onClick={() => {
               setActiveView(VIEWS.DASHBOARD);
               setMobileMenuOpen(false);
             }}
             aria-label="Go to dashboard"
           >
-            <QuizAppLogo className="h-9 w-9 shrink-0" />
-            <div>
-              <p className="text-sm font-semibold text-neutral-900">Quiz App</p>
-              <p className="text-xs text-neutral-500">Modern learning SaaS</p>
-            </div>
+            <QuizAppLogo className="h-7 w-auto max-w-[9rem] shrink-0 object-contain sm:h-8 sm:max-w-[11rem]" />
           </button>
-          <nav className="hidden items-center gap-2 md:flex" aria-label="Main">
-            {renderNavButton(VIEWS.DASHBOARD, "Home")}
-            {renderNavButton(VIEWS.BROWSE, "Browse")}
-            {renderNavButton(VIEWS.HISTORY, "History")}
-            {renderNavButton(VIEWS.CREATE, "Create")}
+          <nav className="hidden items-center md:flex" aria-label="Main">
+            <div className="flex items-center gap-0.5 rounded-full border border-neutral-200/80 bg-slate-100/70 p-1 shadow-inner shadow-slate-200/40 dark:border-slate-600/80 dark:bg-slate-800/70 dark:shadow-slate-950/50">
+              {renderNavButton(VIEWS.DASHBOARD, "Home")}
+              {renderNavButton(VIEWS.BROWSE, "Browse")}
+              {renderNavButton(VIEWS.HISTORY, "History")}
+              {renderNavButton(VIEWS.CREATE, "Create")}
+            </div>
           </nav>
           <div className="hidden items-center md:flex">
             <div className="relative" ref={accountMenuRef}>
               <button
                 type="button"
-                className="inline-flex items-center gap-2 rounded-xl border border-neutral-200 bg-white px-3 py-2 text-sm font-medium text-neutral-800 shadow-sm hover:bg-neutral-50"
+                className="inline-flex items-center gap-2 rounded-full border border-neutral-200/90 bg-white px-3.5 py-2 text-sm font-medium text-neutral-800 shadow-sm transition hover:border-neutral-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-100 dark:hover:border-slate-500 dark:hover:bg-slate-800"
                 aria-expanded={accountMenuOpen}
                 aria-haspopup="menu"
                 aria-label="Account menu"
                 onClick={() => setAccountMenuOpen((prev) => !prev)}
               >
                 <span className="max-w-[10rem] truncate">{formatDisplayName(user?.name || "") || "Account"}</span>
-                <ChevronDownIcon className={`shrink-0 text-neutral-500 transition-transform ${accountMenuOpen ? "rotate-180" : ""}`} />
+                <ChevronDownIcon className={`shrink-0 text-neutral-500 transition-transform dark:text-slate-400 ${accountMenuOpen ? "rotate-180" : ""}`} />
               </button>
               {accountMenuOpen && (
                 <div
                   role="menu"
-                  className="absolute right-0 z-50 mt-1 min-w-[12rem] overflow-hidden rounded-xl border border-neutral-200 bg-white py-1 shadow-lg"
+                  className="absolute right-0 z-50 mt-1.5 w-[min(100vw-1.5rem,16rem)] min-w-[16rem] overflow-hidden rounded-xl border border-neutral-200/90 bg-white py-1 shadow-lg shadow-slate-900/10 dark:border-slate-600 dark:bg-slate-900 dark:shadow-black/40"
                 >
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full px-4 py-2.5 text-left text-sm text-neutral-800 hover:bg-neutral-50"
+                    className="flex w-full px-4 py-2.5 text-left text-sm text-neutral-800 hover:bg-neutral-50 dark:text-slate-200 dark:hover:bg-slate-800"
                     onClick={() => {
                       setActiveView(VIEWS.PROFILE);
                       setAccountMenuOpen(false);
@@ -1423,7 +1647,7 @@ function App() {
                   <button
                     type="button"
                     role="menuitem"
-                    className="flex w-full px-4 py-2.5 text-left text-sm text-neutral-800 hover:bg-neutral-50"
+                    className="flex w-full px-4 py-2.5 text-left text-sm text-neutral-800 hover:bg-neutral-50 dark:text-slate-200 dark:hover:bg-slate-800"
                     onClick={() => {
                       setActiveView(VIEWS.USERS);
                       setAccountMenuOpen(false);
@@ -1431,27 +1655,101 @@ function App() {
                   >
                     Users
                   </button>
-                  <button type="button" role="menuitem" className="flex w-full px-4 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50" onClick={logout}>
+                  <div role="none" className="border-t border-neutral-200 px-4 pb-3 pt-3 dark:border-slate-700">
+                    <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Theme</p>
+                    <div className="flex w-full rounded-lg bg-neutral-100 p-0.5 dark:bg-slate-800" role="group" aria-label="Theme">
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={theme === "light"}
+                        className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition ${
+                          theme === "light"
+                            ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                            : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                        }`}
+                        onClick={() => setTheme("light")}
+                      >
+                        <SunIcon />
+                        Light
+                      </button>
+                      <button
+                        type="button"
+                        role="radio"
+                        aria-checked={theme === "dark"}
+                        className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2 text-xs font-semibold transition ${
+                          theme === "dark"
+                            ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                            : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                        }`}
+                        onClick={() => setTheme("dark")}
+                      >
+                        <MoonIcon />
+                        Dark
+                      </button>
+                    </div>
+                  </div>
+                  <button type="button" role="menuitem" className="flex w-full px-4 py-2.5 text-left text-sm font-medium text-rose-700 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/50" onClick={logout}>
                     Logout
                   </button>
                 </div>
               )}
             </div>
           </div>
-          <button type="button" className="btn-ghost md:hidden" onClick={() => setMobileMenuOpen((prev) => !prev)}>Menu</button>
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-neutral-200/90 bg-white text-neutral-700 shadow-sm transition hover:border-neutral-300 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:border-slate-500 dark:hover:bg-slate-800 md:hidden"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-expanded={mobileMenuOpen}
+            aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          >
+            <MenuIcon />
+          </button>
         </div>
         {mobileMenuOpen && (
-          <div className="app-container pb-3 md:hidden">
-            <div className="app-card flex flex-col gap-2 p-3">
+          <div className="app-container border-t border-neutral-100 bg-slate-50/80 pb-3 pt-2 dark:border-slate-800 dark:bg-slate-950/80 md:hidden">
+            <div className="flex flex-col gap-1 rounded-xl border border-neutral-200/80 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
               {renderNavButton(VIEWS.DASHBOARD, "Home")}
               {renderNavButton(VIEWS.BROWSE, "Browse")}
               {renderNavButton(VIEWS.HISTORY, "History")}
               {renderNavButton(VIEWS.CREATE, "Create")}
-              <div className="my-1 border-t border-neutral-200 pt-2">
-                <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500">Account</p>
+              <div className="my-1 border-t border-neutral-200 pt-2 dark:border-slate-700">
+                <p className="mb-2 px-1 text-[11px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Account</p>
+                <div className="mb-3 px-1">
+                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-neutral-500 dark:text-slate-400">Theme</p>
+                  <div className="flex w-full rounded-lg bg-neutral-100 p-0.5 dark:bg-slate-800" role="group" aria-label="Theme">
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={theme === "light"}
+                      className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2.5 text-xs font-semibold transition ${
+                        theme === "light"
+                          ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                          : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                      }`}
+                      onClick={() => setTheme("light")}
+                    >
+                      <SunIcon />
+                      Light
+                    </button>
+                    <button
+                      type="button"
+                      role="radio"
+                      aria-checked={theme === "dark"}
+                      className={`flex flex-1 items-center justify-center gap-1 rounded-md py-2.5 text-xs font-semibold transition ${
+                        theme === "dark"
+                          ? "bg-white text-neutral-900 shadow-sm dark:bg-slate-700 dark:text-white"
+                          : "text-neutral-500 hover:text-neutral-800 dark:text-slate-500 dark:hover:text-slate-300"
+                      }`}
+                      onClick={() => setTheme("dark")}
+                    >
+                      <MoonIcon />
+                      Dark
+                    </button>
+                  </div>
+                </div>
                 <button
                   type="button"
-                  className="w-full rounded-xl px-3 py-2 text-center text-sm text-neutral-800 hover:bg-neutral-100"
+                  className="w-full rounded-xl px-3 py-2 text-center text-sm text-neutral-800 hover:bg-neutral-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   onClick={() => {
                     setActiveView(VIEWS.PROFILE);
                     setMobileMenuOpen(false);
@@ -1461,7 +1759,7 @@ function App() {
                 </button>
                 <button
                   type="button"
-                  className="w-full rounded-xl px-3 py-2 text-center text-sm text-neutral-800 hover:bg-neutral-100"
+                  className="w-full rounded-xl px-3 py-2 text-center text-sm text-neutral-800 hover:bg-neutral-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   onClick={() => {
                     setActiveView(VIEWS.USERS);
                     setMobileMenuOpen(false);
@@ -1469,7 +1767,7 @@ function App() {
                 >
                   Users
                 </button>
-                <button type="button" className="btn-danger mt-1 w-full" onClick={() => { logout(); setMobileMenuOpen(false); }}>
+                <button type="button" className="btn-danger mt-2 w-full dark:border-rose-900/50 dark:text-rose-400 dark:hover:bg-rose-950/40" onClick={() => { logout(); setMobileMenuOpen(false); }}>
                   Logout
                 </button>
               </div>
@@ -1478,16 +1776,16 @@ function App() {
         )}
       </header>
 
-      <main className="app-container space-y-4 py-6 md:space-y-6">
+      <main className="app-container space-y-4 py-6 pb-12 md:space-y-6 md:py-8">
         {activeView === VIEWS.DASHBOARD && (
           <section className="space-y-4 md:space-y-6">
-            {dashboardLoading && <p className="text-sm text-neutral-600">Loading home feed...</p>}
+            {dashboardLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading home feed...</p>}
             {dashboardError && <p className="text-sm text-rose-700">{dashboardError}</p>}
             <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
               <div className="space-y-4 lg:col-span-2">
                 <article className="app-card">
                   <h2 className="text-xl font-semibold">What's on your mind?</h2>
-                  <p className="mt-1 text-sm text-neutral-600">Share tips, ask questions, or post your exam progress.</p>
+                  <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">Share tips, ask questions, or post your exam progress.</p>
                   <textarea
                     className="input-base mt-3 min-h-[110px] resize-y"
                     placeholder="Post something helpful for your fellow examinees..."
@@ -1534,7 +1832,7 @@ function App() {
                         </div>
                       </div>
                       <p className="mt-3 text-sm leading-relaxed text-neutral-700">{post.content}</p>
-                      <div className="mt-4 flex items-center gap-4 border-t border-neutral-100 pt-3 text-xs text-neutral-500">
+                      <div className="mt-4 flex items-center gap-4 border-t border-neutral-100 pt-3 text-xs text-neutral-500 dark:border-slate-700 dark:text-slate-400">
                         <span>{post.likes + (likedPostIds[post.id] ? 1 : 0)} likes</span>
                         <span>{post.comments + (postComments[post.id]?.length || 0)} comments</span>
                       </div>
@@ -1558,7 +1856,7 @@ function App() {
                       </div>
                       <div className="mt-3 space-y-2">
                         {(postComments[post.id] || []).map((entry) => (
-                          <div key={entry.id} className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">
+                          <div key={entry.id} className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">
                             <p className="text-xs font-semibold text-neutral-800">{entry.author}</p>
                             <p className="mt-1 text-sm text-neutral-700">{entry.content}</p>
                           </div>
@@ -1626,9 +1924,9 @@ function App() {
                 <article className="app-card">
                   <h3 className="text-lg font-semibold">Community Tips</h3>
                   <ul className="mt-3 space-y-2 text-sm text-neutral-700">
-                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">Answer at least one forum question daily.</li>
-                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">Share one reviewer per week to help others.</li>
-                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2">Join a study buddy group for accountability.</li>
+                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">Answer at least one forum question daily.</li>
+                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">Share one reviewer per week to help others.</li>
+                    <li className="rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 dark:border-slate-600 dark:bg-slate-800/80">Join a study buddy group for accountability.</li>
                   </ul>
                 </article>
               </div>
@@ -1638,7 +1936,7 @@ function App() {
 
         {activeView === VIEWS.BROWSE && (
           <section className="space-y-4 md:space-y-6">
-            {browseLoading && <p className="text-sm text-neutral-600">Loading quizzes...</p>}
+            {browseLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading quizzes...</p>}
             {browseError && <p className="text-sm text-rose-700">{browseError}</p>}
             <div className="flex flex-wrap gap-2">
               <button type="button" onClick={() => setSelectedCategory("")} className={`rounded-full px-3 py-1 text-xs font-medium ${selectedCategory === "" ? "bg-brand-soft text-brand-primary ring-1 ring-brand-border" : "bg-neutral-100 text-neutral-700"}`}>All</button>
@@ -1658,10 +1956,10 @@ function App() {
                     <div className="min-h-0 flex-1">
                       <span className="inline-flex rounded-full border border-brand-border bg-brand-soft px-3 py-1 text-xs font-medium text-brand-primary">{quiz.category}</span>
                       <h3 className="mt-2 text-lg font-semibold">{quiz.title}</h3>
-                      <p className="mt-2 line-clamp-2 text-sm text-neutral-600">{quiz.description || "Challenge yourself with this quiz."}</p>
-                      <p className="mt-3 text-sm text-neutral-600">{quiz.questionCount} questions • {Math.max(1, Math.round(quiz.questionCount / 2))} min</p>
+                      <p className="mt-2 line-clamp-2 text-sm text-neutral-600 dark:text-slate-400">{quiz.description || "Challenge yourself with this quiz."}</p>
+                      <p className="mt-3 text-sm text-neutral-600 dark:text-slate-400">{quiz.questionCount} questions • {Math.max(1, Math.round(quiz.questionCount / 2))} min</p>
                     </div>
-                    <div className="mt-auto flex shrink-0 flex-col gap-2 border-t border-neutral-100 pt-4">
+                    <div className="mt-auto flex shrink-0 flex-col gap-2 border-t border-neutral-100 pt-4 dark:border-slate-700">
                       <button type="button" onClick={() => { setSelectedQuiz(quiz); setActiveView(VIEWS.QUIZ_INTRO); }} className="btn-primary w-full">View Quiz</button>
                       {own && (
                         <>
@@ -1691,7 +1989,7 @@ function App() {
             {!browseLoading && quizzes.length === 0 && (
               <article className="app-card">
                 <h3 className="text-lg font-semibold">No playable quizzes yet</h3>
-                <p className="mt-2 text-sm text-neutral-600">Create a quiz and add at least one question to make it appear here.</p>
+                <p className="mt-2 text-sm text-neutral-600 dark:text-slate-400">Create a quiz and add at least one question to make it appear here.</p>
                 <button type="button" className="btn-primary mt-4" onClick={() => setActiveView(VIEWS.CREATE)}>Go to Create</button>
               </article>
             )}
@@ -1703,7 +2001,7 @@ function App() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <h2 className="text-2xl font-semibold">Edit Quiz</h2>
-                <p className="mt-1 text-sm text-neutral-600">Update quiz info and manage questions.</p>
+                <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">Update quiz info and manage questions.</p>
               </div>
               <button type="button" className="btn-secondary" onClick={() => setActiveView(VIEWS.BROWSE)}>Back to Browse</button>
             </div>
@@ -1815,8 +2113,11 @@ function App() {
                 <p className="text-neutral-600">{activeQuiz.title}</p>
                 <p className="font-medium text-brand-primary">{timedMode ? formatTime(secondsLeft) : "Practice Mode"}</p>
               </div>
-              <div className="h-2 rounded-full bg-neutral-200">
-                <div className="h-2 rounded-full bg-brand-primary transition-all" style={{ width: `${progress}%` }} />
+              <div className="h-2 overflow-hidden rounded-full bg-neutral-200/90">
+                <div
+                  className="h-2 rounded-full bg-gradient-to-r from-brand-primary to-brand-accent transition-all duration-300 ease-out"
+                  style={{ width: `${progress}%` }}
+                />
               </div>
               <p className="mt-2 text-xs uppercase tracking-wide text-neutral-500">Question {currentQuestionIndex + 1} of {activeQuiz.questions.length}</p>
             </div>
@@ -1858,7 +2159,7 @@ function App() {
               })()}
             </div>
 
-            <div className="sticky bottom-3 rounded-2xl border border-neutral-200 bg-white/95 p-3 shadow-sm backdrop-blur sm:static sm:border-none sm:bg-transparent sm:p-0 sm:shadow-none">
+            <div className="sticky bottom-3 rounded-2xl border border-neutral-200 bg-white/95 p-3 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95 sm:static sm:border-none sm:bg-transparent sm:p-0 sm:shadow-none dark:sm:bg-transparent">
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button type="button" className="btn-secondary w-full sm:w-auto" disabled={currentQuestionIndex === 0} onClick={() => setCurrentQuestionIndex((prev) => Math.max(0, prev - 1))}>Previous</button>
                 {currentQuestionIndex < activeQuiz.questions.length - 1 ? (
@@ -1878,7 +2179,7 @@ function App() {
           <section className="mx-auto max-w-3xl">
             <article className="app-card">
               <h3 className="text-lg font-semibold">No questions available</h3>
-              <p className="mt-2 text-sm text-neutral-600">This quiz cannot be played because it has no questions.</p>
+              <p className="mt-2 text-sm text-neutral-600 dark:text-slate-400">This quiz cannot be played because it has no questions.</p>
               <button type="button" className="btn-primary mt-4" onClick={() => setActiveView(VIEWS.BROWSE)}>Back to Browse</button>
             </article>
           </section>
@@ -1925,7 +2226,7 @@ function App() {
                 {historyClearLoading ? "Clearing…" : "Clear history"}
               </button>
             </div>
-            {historyLoading && <p className="text-sm text-neutral-600">Loading history...</p>}
+            {historyLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading history...</p>}
             {historyError && <p className="text-sm text-rose-700">{historyError}</p>}
             <div className="space-y-2">
               {attempts.length === 0 && <p className="text-sm text-neutral-500">No attempts yet.</p>}
@@ -1958,7 +2259,7 @@ function App() {
                   </div>
                   <div>
                     <p className="text-lg font-semibold text-neutral-900">{formatDisplayName(user.name)}</p>
-                    <p className="text-sm text-neutral-600">{user.email}</p>
+                    <p className="text-sm text-neutral-600 dark:text-slate-400">{user.email}</p>
                   </div>
                 </div>
                 <p className="text-xs text-neutral-500">Details refresh from the server when you open this page.</p>
@@ -1973,9 +2274,9 @@ function App() {
           <section className="app-card space-y-4 md:space-y-6">
             <div>
               <h2 className="text-2xl font-semibold">Users</h2>
-              <p className="mt-1 text-sm text-neutral-600">People registered on this app (names only).</p>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">People registered on this app (names only).</p>
             </div>
-            {usersLoading && <p className="text-sm text-neutral-600">Loading users...</p>}
+            {usersLoading && <p className="text-sm text-neutral-600 dark:text-slate-400">Loading users...</p>}
             {usersError && <p className="text-sm text-rose-700">{usersError}</p>}
             {!usersLoading && !usersError && (
               <ul className="divide-y divide-neutral-200 rounded-xl border border-neutral-200">
@@ -1997,7 +2298,7 @@ function App() {
           <section className="app-card space-y-4 md:space-y-6">
             <div>
               <h2 className="text-2xl font-semibold">Create Quiz</h2>
-              <p className="mt-1 text-sm text-neutral-600">Create and publish a quiz with multiple-choice, true/false, or fill-in-the-blank questions.</p>
+              <p className="mt-1 text-sm text-neutral-600 dark:text-slate-400">Create and publish a quiz with multiple-choice, true/false, or fill-in-the-blank questions.</p>
             </div>
             <form onSubmit={handleCreateQuiz} className="space-y-4">
               <div>

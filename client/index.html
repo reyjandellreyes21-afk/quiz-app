@@ -2,6 +2,16 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        try {
+          var t = localStorage.getItem("quiz_theme");
+          if (t === "dark") document.documentElement.classList.add("dark");
+          else if (t === "light") document.documentElement.classList.remove("dark");
+          else if (window.matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
     <link rel="icon" type="image/png" href="/src/assets/QA-logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quiz App</title>
